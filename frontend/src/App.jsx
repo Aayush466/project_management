@@ -1,10 +1,15 @@
 import { useState } from "react";
-
+import AppRouter from "./router/AppRouter";
 function App() {
-
   return (
     <>
-      <h1 class="text-3xl font-bold underline text-red-500">Hello world!</h1>
+      <div className="min-h-screen flex flex-col">
+        {/* <Navbar /> */}
+        <main className="flex-grow">
+          <AppRouter />
+        </main>
+        {/* <Footer /> */}
+      </div>
     </>
   );
 }
