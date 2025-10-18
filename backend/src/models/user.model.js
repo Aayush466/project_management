@@ -4,31 +4,67 @@ import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
     {
-        name: {
-
+        username: {
+            type: String,
+            required: true,
+            lowercase: true,
+            trim: true,
+            index: true,
+        },
+        useremail: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+        },
+        avatar: {
+            type: String,
+            required: false
+        },
+        role: {
+            type: String,
+            enum: ['User', 'Admin'],
+            default: 'user',
+        },
+        userpassword: {
+            type: String,
+            required: [true, "Password is required"],
+        },
+        otp: {
+            type: Number,
+            required:[true,"OTP is required"]
+        },
+        verified: {
+            type: Boolean,
+            default:false
         },
         refreshToken: {
-            type: String,
+            type: String
         },
     }, { timestamps: true, }
 );
 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
+    if (!this.isModified("userpassword")) return next();
 
-    this.password = await bcrypt.hash(this.password, 10);
+    this.userpassword = await bcrypt.hash(this.userpassword, 10);
     next();
 });
 
-userSchema.methods.isPasswordCorrect = async function (password) {
-    return await bcrypt.compare(password, this.password);
+userSchema.methods.isPasswordCorrect = async function (userpassword) {
+    return await bcrypt.compare(userpassword, this.userpassword);
+};
+
+userSchema.methods.isOtpCorrect = async function (otp) {
+    return otp == this.otp;
 };
 
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
-            email: this.email,
+            useremail: this.useremail,
 
         },
         process.env.ACCESS_TOKEN_SECRET,
