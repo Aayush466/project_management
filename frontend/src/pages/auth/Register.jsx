@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { AiOutlineUpload } from "react-icons/ai";
+import { Link } from "react-router-dom";
 
 const Register = () => {
   const [step, setStep] = useState("register"); // "register" | "verify"
@@ -22,18 +22,17 @@ const Register = () => {
     setMessage("");
 
     try {
-      const data = new FormData();
-      data.append("username", formData.username);
-      data.append("useremail", formData.useremail);
-      data.append("userpassword", formData.userpassword);
-      data.append("role", formData.role);
-      if (avatar) data.append("avatar", avatar); // optional upload
+      const data = {};
+      data["username"] =formData["username"];
+      data["useremail"] =formData["useremail"];
+      data["userpassword"]=formData["userpassword"];
+      data["role"]=formData["role"];
 
       const response = await axios.post(
-        "http://localhost:8000/api/v1/auth/register",
+        "http://localhost:8000/api/v1/users/register",
         data,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { "Content-Type": "application/json" },
           withCredentials: true,
         }
       );
@@ -64,13 +63,12 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/v1/auth/submit-otp",
+        "http://localhost:8000/api/v1/users/submit-otp",
         {
           useremail: formData.useremail,
           userpassword: formData.userpassword,
-          otp,
+          otp
         },
-        { withCredentials: true }
       );
 
       setMessage("✅ User verified successfully! Redirecting...");
@@ -212,6 +210,11 @@ const Register = () => {
             {message}
           </p>
         )}
+         <p
+            className="mt-4 text-center text-gray-600 text-sm sm:text-base flex justify-center gap-2"
+          >Already have an account?{" "}
+            <Link to="/login" className="text-[#7B3931] font-semibold hover:underline">Login</Link>
+          </p>
       </div>
     </div>
   );
