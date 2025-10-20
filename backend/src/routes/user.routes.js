@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  loginUser,
   registerUser,
   submitOtp
 } from "../controllers/user.controller.js";
@@ -25,6 +26,8 @@ const router = Router();
 router.route("/register").post(registerUser);
 
 router.route("/submit-otp").post(submitOtp);
+
+router.route("/login").post(loginUser);
 
 // router.route("/login").post(loginUser);
 
