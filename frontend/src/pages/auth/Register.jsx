@@ -149,7 +149,6 @@ const Register = () => {
               <option value="User">User</option>
             </select>
 
-
             {/* Submit */}
             <button
               type="submit"
