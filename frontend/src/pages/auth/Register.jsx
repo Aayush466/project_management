@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [step, setStep] = useState("register"); // "register" | "verify"
@@ -11,9 +11,46 @@ const Register = () => {
     role: "",
   });
   const [otp, setOtp] = useState("");
-  const [avatar, setAvatar] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const navigate = useNavigate();
+
+  // 🔹 Check Authentication on Mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Step 1: Check if user is already logged in
+        const res = await fetch("http://localhost:8000/api/v1/users/check", {
+          credentials: "include", // send cookies
+        });
+
+        if (res.status === 200) {
+          const data = await res.json();
+          if (data?.data?.isAuthenticated) {
+            navigate("/dashboard");
+            return;
+          }
+        }
+
+        // Step 2: Try refreshing token if not authenticated
+        const refreshRes = await axios.post(
+          "http://localhost:8000/api/v1/users/refresh-token",
+          {},
+          { withCredentials: true }
+        );
+
+        if (refreshRes?.data?.isAuthenticated) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        // Do nothing — user can continue to register
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   // 🔹 Handle Register
   const handleRegister = async (e) => {
@@ -22,34 +59,30 @@ const Register = () => {
     setMessage("");
 
     try {
-      const data = {};
-      data["username"] =formData["username"];
-      data["useremail"] =formData["useremail"];
-      data["userpassword"]=formData["userpassword"];
-      data["role"]=formData["role"];
-
       const response = await axios.post(
         "http://localhost:8000/api/v1/users/register",
-        data,
+        {
+          username: formData.username,
+          useremail: formData.useremail,
+          userpassword: formData.userpassword,
+          role: formData.role,
+        },
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
         }
       );
 
-      setMessage(
-        "✅ Registration successful! Please check your email for OTP."
-      );
+      setMessage("✅ Registration successful! Please check your email for OTP.");
       setStep("verify");
     } catch (error) {
       console.error("Axios Error:", error);
-      if (error.response) {
-        setMessage(
-          `❌ ${error.response.data?.message || "Registration failed"}`
-        );
-      } else {
-        setMessage("❌ Network or server error. Please try again.");
-      }
+      setMessage(
+        `❌ ${
+          error.response?.data?.message ||
+          "Registration failed. Please try again."
+        }`
+      );
     } finally {
       setLoading(false);
     }
@@ -67,23 +100,23 @@ const Register = () => {
         {
           useremail: formData.useremail,
           userpassword: formData.userpassword,
-          otp
+          otp,
         },
+        { withCredentials: true }
       );
 
       setMessage("✅ User verified successfully! Redirecting...");
       setTimeout(() => {
-        window.location.href = "/dashboard"; // redirect
-      }, 2000);
+        navigate("/dashboard");
+      }, 1500);
     } catch (error) {
       console.error("OTP Error:", error);
-      if (error.response) {
-        setMessage(
-          `❌ ${error.response.data?.message || "OTP verification failed"}`
-        );
-      } else {
-        setMessage("❌ Network or server error. Please try again.");
-      }
+      setMessage(
+        `❌ ${
+          error.response?.data?.message ||
+          "OTP verification failed. Please try again."
+        }`
+      );
     } finally {
       setLoading(false);
     }
@@ -202,18 +235,17 @@ const Register = () => {
         {/* ========================== MESSAGE ========================== */}
         {message && (
           <p
-            className={`mt-4 text-center ${
-              message.includes("✅") ? "text-green-600" : "text-red-600"
-            }`}
+            className={`mt-4 text-center ${message.includes("✅") ? "text-green-600" : "text-red-600"
+              }`}
           >
             {message}
           </p>
         )}
-         <p
-            className="mt-4 text-center text-gray-600 text-sm sm:text-base flex justify-center gap-2"
-          >Already have an account?{" "}
-            <Link to="/login" className="text-[#7B3931] font-semibold hover:underline">Login</Link>
-          </p>
+        <p
+          className="mt-4 text-center text-gray-600 text-sm sm:text-base flex justify-center gap-2"
+        >Already have an account?{" "}
+          <Link to="/login" className="text-[#7B3931] font-semibold hover:underline">Login</Link>
+        </p>
       </div>
     </div>
   );
