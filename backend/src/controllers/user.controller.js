@@ -190,7 +190,51 @@ export const loginUser = asyncHandler(async (req, res) => {
     );
 
     const loggedInUser = await User.findById(user._id).select(
-        "-password -refreshToken"
+        "-userpassword -refreshToken"
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser
+                },
+                "User logged In Successfully"
+            )
+        );
+});
+
+export const authCheck = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: req.user,
+                    isAuthenticated: true
+                },
+                "User logged In Successfully"
+            )
+        );
+});
+
+export const refreshToken = asyncHandler(async (req, res) => {
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+        req.user._id
+    );
+
+    const loggedInUser = await User.findById(req.user._id).select(
+        "-userpassword -refreshToken"
     );
 
     const options = {
@@ -207,10 +251,9 @@ export const loginUser = asyncHandler(async (req, res) => {
                 200,
                 {
                     user: loggedInUser,
-                    accessToken,
-                    refreshToken,
+                    isAuthenticated: true
                 },
-                "User logged In Successfully"
+                "User Tokens generated Successfully"
             )
         );
 });

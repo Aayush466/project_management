@@ -3,11 +3,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 
-export const verifyJWT = asyncHandler(async (req, _, next) => {
+export const verifyAccessToken = asyncHandler(async (req, _, next) => {
   try {
     const token =
-      req.cookies?.accessToken ||
-      req.header("Authorization")?.replace("Bearer ", "");
+      req.cookies?.accessToken;
 
     if (!token) {
       throw new ApiError(401, "Unauthorized request");
@@ -27,5 +26,30 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     next();
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid access token");
+  }
+});
+
+export const verifyRefreshToken = asyncHandler(async (req, _, next) => {
+  try {
+    const token =
+      req.cookies?.refreshToken;
+
+    if (!token) {
+      throw new ApiError(401, "Unauthorized request");
+    }
+
+    const decodedToken = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+
+    const user = await User.findById(decodedToken?._id).select(
+      "-userpassword"
+    );
+
+    if (!user) {
+      throw new ApiError(401, "Invalid Refresh Token");
+    }
+    req.user = user;
+    next();
+  } catch (error) {
+    throw new ApiError(401, error?.message || "Invalid refresh token, please login again");
   }
 });
