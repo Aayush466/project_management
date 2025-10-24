@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -11,6 +11,41 @@ const Login = () => {
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Step 1: Check if already authenticated
+        const res = await fetch("http://localhost:8000/api/v1/users/check", {
+          credentials: "include", // send cookies
+        });
+
+        if (res.status === 200) {
+          const data = await res.json();
+          if (data?.data?.isAuthenticated) {
+            navigate("/dashboard");
+            return;
+          }
+        }
+
+        // Step 2: Try refreshing token if not authenticated
+        const refreshRes = await axios.post(
+          "http://localhost:8000/api/v1/users/refresh-token",
+          {},
+          { withCredentials: true }
+        );
+
+        if (refreshRes?.data?.isAuthenticated) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        // Do nothing here — user can continue to login manually
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,19 +60,11 @@ const Login = () => {
       );
 
       console.log("Login Response:", response.data);
-
-      // Save user info and token if needed
-      const user = response.data.user || {};
-      const token = response.data.token || "";
-
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", token);
-
       setMessage("✅ Login successful! Redirecting...");
 
-      // Redirect to dashboard or home page
+      // Redirect to dashboard
       setTimeout(() => {
-        navigate("/dashboard"); // change as per your route
+        navigate("/dashboard");
       }, 1000);
     } catch (error) {
       console.error("Login Error:", error.response || error.message);
@@ -49,70 +76,67 @@ const Login = () => {
     }
   };
 
-  return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-6 sm:p-8 w-full sm:w-96 border"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center text-[#7B3931]">
-          Login
-        </h2>
+    return (
+        <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
+            <form
+                onSubmit={handleSubmit}
+                className="bg-white shadow-lg rounded-2xl p-6 sm:p-8 w-full sm:w-96 border"
+            >
+                <h2 className="text-2xl font-bold mb-6 text-center text-[#7B3931]">
+                    Login
+                </h2>
 
         {/* Email */}
         <input
           type="email"
           placeholder="Email"
           value={formData.useremail}
-          onChange={(e) =>
-            setFormData({ ...formData, useremail: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, useremail: e.target.value })}
           className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
           required
         />
 
-        {/* Password */}
-        <input
-          type="password"
-          placeholder="Password"
-          value={formData.userpassword}
-          onChange={(e) =>
-            setFormData({ ...formData, userpassword: e.target.value })
-          }
-          className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
-          required
-        />
+                {/* Password */}
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={formData.userpassword}
+                    onChange={(e) =>
+                        setFormData({ ...formData, userpassword: e.target.value })
+                    }
+                    className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
+                    required
+                />
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-[#7B3931] text-white py-3 rounded-lg hover:bg-[#622d26] disabled:opacity-50 transition"
-        >
-          {loading ? "Processing..." : "Login"}
-        </button>
+                {/* Submit Button */}
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#7B3931] text-white py-3 rounded-lg hover:bg-[#622d26] disabled:opacity-50 transition"
+                >
+                    {loading ? "Processing..." : "Login"}
+                </button>
 
-        {/* Registration Link */}
-        <p className="mt-4 text-center text-gray-600 text-sm sm:text-base">
-          Don't have an account?{" "}
-          <Link to="/" className="text-[#7B3931] font-semibold hover:underline">
-            Register
-          </Link>
-        </p>
+                {/* Registration Link */}
+                <p className="mt-4 text-center text-gray-600 text-sm sm:text-base">
+                    Don't have an account?{" "}
+                    <Link to="/" className="text-[#7B3931] font-semibold hover:underline">
+                        Register
+                    </Link>
+                </p>
 
-        {/* Message */}
-        {message && (
-          <p
-            className={`mt-4 text-center ${
-              message.includes("✅") ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {message}
-          </p>
-        )}
-      </form>
-    </div>
-  );
+                {/* Message */}
+                {message && (
+                    <p
+                        className={`mt-4 text-center ${message.includes("✅") ? "text-green-600" : "text-red-600"
+                            }`}
+                    >
+                        {message}
+                    </p>
+                )}
+            </form>
+        </div>
+    );
 };
 
 export default Login;

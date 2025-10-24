@@ -1,10 +1,13 @@
 import { Router } from "express";
 import {
+  authCheck,
+  loginUser,
   registerUser,
-  submitOtp
+  submitOtp,
+  refreshToken
 } from "../controllers/user.controller.js";
 
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyAccessToken, verifyRefreshToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -25,6 +28,11 @@ const router = Router();
 router.route("/register").post(registerUser);
 
 router.route("/submit-otp").post(submitOtp);
+
+router.route("/login").post(loginUser);
+
+router.route("/check").get(verifyAccessToken,authCheck);
+router.route("/refresh-token").post(verifyRefreshToken,refreshToken);
 
 // router.route("/login").post(loginUser);
 

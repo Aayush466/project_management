@@ -166,57 +166,97 @@ export const submitOtp = asyncHandler(async (req, res) => {
         );
 });
 
-// export const loginUser = asyncHandler(async (req, res) => {
-//     const { email, username, password } = req.body;
-//     console.log(email);
+export const loginUser = asyncHandler(async (req, res) => {
+    const { useremail, userpassword } = req.body;
 
-//     if (!username && !email) {
-//         throw new ApiError(400, "username or email is required");
-//     }
+    if (!(useremail && userpassword)) {
+        throw new ApiError(400, "useremail and userpassword is required");
+    }
 
-//     const user = await User.findOne({
-//         $or: [{ username }, { email }],
-//     });
+    const user = await User.findOne({useremail:useremail,verified:true});
 
-//     if (!user) {
-//         throw new ApiError(404, "User does not exist");
-//     }
+    if (!user) {
+        throw new ApiError(404, "Invalid user credentials");
+    }
 
-//     const isPasswordValid = await user.isPasswordCorrect(password);
+    const isPasswordValid = await user.isPasswordCorrect(userpassword);
 
-//     if (!isPasswordValid) {
-//         throw new ApiError(401, "Invalid user credentials");
-//     }
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid password");
+    }
 
-//     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
-//         user._id
-//     );
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+        user._id
+    );
 
-//     const loggedInUser = await User.findById(user._id).select(
-//         "-password -refreshToken"
-//     );
+    const loggedInUser = await User.findById(user._id).select(
+        "-userpassword -refreshToken"
+    );
 
-//     const options = {
-//         httpOnly: true,
-//         secure: true,
-//     };
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
 
-//     return res
-//         .status(200)
-//         .cookie("accessToken", accessToken, options)
-//         .cookie("refreshToken", refreshToken, options)
-//         .json(
-//             new ApiResponse(
-//                 200,
-//                 {
-//                     user: loggedInUser,
-//                     accessToken,
-//                     refreshToken,
-//                 },
-//                 "User logged In Successfully"
-//             )
-//         );
-// });
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser
+                },
+                "User logged In Successfully"
+            )
+        );
+});
+
+export const authCheck = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: req.user,
+                    isAuthenticated: true
+                },
+                "User logged In Successfully"
+            )
+        );
+});
+
+export const refreshToken = asyncHandler(async (req, res) => {
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+        req.user._id
+    );
+
+    const loggedInUser = await User.findById(req.user._id).select(
+        "-userpassword -refreshToken"
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser,
+                    isAuthenticated: true
+                },
+                "User Tokens generated Successfully"
+            )
+        );
+});
 
 // export const logoutUser = asyncHandler(async (req, res) => {
 //     await User.findByIdAndUpdate(
