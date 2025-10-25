@@ -3,8 +3,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 import nodemailer from "nodemailer";
+import crypto from "crypto";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -33,7 +33,6 @@ const generateAccessAndRefereshTokens = async (userId) => {
         );
     }
 };
-
 
 export const registerUser = asyncHandler(async (req, res) => {
     const { useremail, username, role, userpassword } = req.body;
@@ -173,7 +172,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "useremail and userpassword is required");
     }
 
-    const user = await User.findOne({useremail:useremail,verified:true});
+    const user = await User.findOne({ useremail: useremail, verified: true });
 
     if (!user) {
         throw new ApiError(404, "Invalid user credentials");
@@ -258,30 +257,162 @@ export const refreshToken = asyncHandler(async (req, res) => {
         );
 });
 
-// export const logoutUser = asyncHandler(async (req, res) => {
-//     await User.findByIdAndUpdate(
-//         req.user._id,
-//         {
-//             $unset: {
-//                 refreshToken: 1, // this removes the field from document
-//             },
-//         },
-//         {
-//             new: true,
-//         }
-//     );
+export const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1, // this removes the field from document
+            },
+        },
+        {
+            new: true,
+        }
+    );
 
-//     const options = {
-//         httpOnly: true,
-//         secure: true,
-//     };
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
 
-//     return res
-//         .status(200)
-//         .clearCookie("accessToken", options)
-//         .clearCookie("refreshToken", options)
-//         .json(new ApiResponse(200, {}, "User logged Out"));
-// });
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged Out"));
+});
+
+export const getTeamMembers = asyncHandler(async (req, res) => {
+    const users = await User.find({})
+
+    if (!users || users.length === 0) {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, [], "No team members found"));
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, users, "Team memeber fetched succefully "));
+})
+
+export const removeMember = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+        throw new ApiError(404, "User not found ")
+    }
+
+    if (user.role === "Admin") {
+        throw new ApiError(403, "Cannot remove an Admin user ")
+    }
+
+    await user.deleteOne();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, null, "Team member removed successfully"));
+})
+
+export const inviteMember = asyncHandler(async (req, res) => {
+    const { useremail } = req.body;
+    const inviterId = req.user?._id || null; // optional if using auth middleware
+
+    if (!useremail) {
+        throw new ApiError(400, "User email is required");
+    }
+
+    // Check if already exists
+    const existingUser = await User.findOne({ useremail });
+    if (existingUser) {
+        throw new ApiError(400, "User with this email already exists");
+    }
+
+    // Generate invite token and expiration
+    const inviteToken = crypto.randomBytes(32).toString("hex");
+    const inviteExpires = Date.now() + 1000 * 60 * 60 * 24; // valid 24 hours
+
+    // Create new invited user
+    const newUser = await User.create({
+        username: "Invited User",
+        useremail,
+        userpassword: "temporary-password",
+        otp: 0,
+        verified: false,
+        role: "User",
+        invitedBy: inviterId,
+        inviteToken,
+        inviteExpires,
+    });
+
+    try {
+        const inviteLink = `${process.env.CLIENT_URL}/accept-invite/${inviteToken}`;
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.USER,
+                pass: process.env.USERPASS,
+            },
+        });
+
+        await transporter.sendMail({
+            from: `"Team App" <${process.env.USER}>`,
+            to: useremail,
+            subject: "You're invited to join our team!",
+            html: `
+        <h3>Welcome to the Team!</h3>
+        <p>You’ve been invited to join our workspace. Click the link below to accept your invitation:</p>
+        <a href="${inviteLink}" target="_blank">${inviteLink}</a>
+        <p>This link will expire in 24 hours.</p>
+      `,
+        });
+    } catch (emailError) {
+        console.error("Email sending failed:", emailError.message);
+    }
+
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(201, {
+                id: newUser._id,
+                username: newUser.username,
+                useremail: newUser.useremail,
+                role: newUser.role,
+            }, `Invitation created successfully for ${useremail}`)
+        );
+});
+
+export const acceptInvite = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    const { username, userpassword } = req.body;
+
+    if (!username || !userpassword) {
+        throw new ApiError(400, "Username and password are required");
+    }
+
+    const invitedUser = await User.findOne({
+        inviteToken: token,
+        inviteExpires: { $gt: Date.now() },
+    });
+
+    if (!invitedUser) {
+        throw new ApiError(400, "Invalid or expired invitation link");
+    }
+
+    invitedUser.username = username;
+    invitedUser.userpassword = userpassword;
+    invitedUser.verified = true;
+    invitedUser.inviteToken = null;
+    invitedUser.inviteExpires = null;
+
+    await invitedUser.save();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, null, "Invitation accepted successfully"));
+});
 
 // export const refreshAccessToken = asyncHandler(async (req, res) => {
 //     const incomingRefreshToken =

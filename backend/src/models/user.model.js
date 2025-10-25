@@ -33,15 +33,28 @@ const userSchema = new Schema(
         },
         otp: {
             type: Number,
-            required:[true,"OTP is required"]
+            required: [true, "OTP is required"]
         },
         verified: {
             type: Boolean,
-            default:false
+            default: false
         },
         refreshToken: {
             type: String
         },
+        invitedBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
+        inviteToken: {
+            type: String,
+            default: null, // used when sending invitation email
+        },
+        inviteExpires: {
+            type: Date,
+            default: null
+        }
     }, { timestamps: true, }
 );
 

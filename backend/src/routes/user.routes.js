@@ -4,7 +4,12 @@ import {
   loginUser,
   registerUser,
   submitOtp,
-  refreshToken
+  refreshToken,
+  logoutUser,
+  getTeamMembers,
+  inviteMember,
+  removeMember,
+  acceptInvite
 } from "../controllers/user.controller.js";
 
 import { verifyAccessToken, verifyRefreshToken } from "../middlewares/auth.middleware.js";
@@ -31,13 +36,19 @@ router.route("/submit-otp").post(submitOtp);
 
 router.route("/login").post(loginUser);
 
-router.route("/check").get(verifyAccessToken,authCheck);
-router.route("/refresh-token").post(verifyRefreshToken,refreshToken);
+router.route("/check").get(verifyAccessToken, authCheck);
+router.route("/refresh-token").post(verifyRefreshToken, refreshToken);
+router.route("/logout").post(verifyAccessToken, logoutUser);
+
+// team page routing 
+router.route("/team").get(verifyAccessToken, getTeamMembers);
+router.route("/invite").post(inviteMember);
+router.route("/id").delete(verifyAccessToken, removeMember);
+router.route("/accept-invite/:token").post(verifyAccessToken, acceptInvite);
 
 // router.route("/login").post(loginUser);
 
 //secured routes
-// router.route("/logout").post(verifyJWT, logoutUser);
 // router.route("/refresh-token").post(refreshAccessToken);
 // router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 // router.route("/current-user").get(verifyJWT, getCurrentUser);
