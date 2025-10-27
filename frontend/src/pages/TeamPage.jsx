@@ -3,6 +3,7 @@
 // import Topbar from "../components/Topbar";
 // import InviteModal from "../components/InviteModal";
 // import { UserPlus, Trash2 } from "lucide-react";
+// import axios from "axios";
 
 // const TeamPage = () => {
 //   const [showModal, setShowModal] = useState(false);
@@ -114,61 +115,56 @@ import Topbar from "../components/Topbar";
 import InviteModal from "../components/InviteModal";
 import { UserPlus, Trash2 } from "lucide-react";
 
+const API_URL = "http://localhost:8000/api/v1/teams"; // Update with your backend URL
+
 const TeamPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  // ✅ Fetch Team Members from Backend
+  // Fetch team members
   const fetchMembers = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await axios.get(`http://localhost:8000/api/v1/users/team`);
-      setMembers(res.data.data || res.data); // handle ApiResponse or direct array
-    } catch (err) {
-      console.error("Error fetching members:", err);
-      setError("Failed to load team members.");
-    } finally {
-      setLoading(false);
+      const { data } = await axios.get(`${API_URL}/team-member`);
+      setMembers(data.data); // ApiResponse structure
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to fetch team members");
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchMembers();
   }, []);
 
-  // ✅ Invite Member API
+  // Invite member
   const handleInvite = async (email) => {
+    console.log("Sending email to backend:", email);
     try {
-      const res = await axios.post(
-        `http://localhost:8000/api/v1/users/invite`,
-        {
-          useremail: email,
-        }
-      );
-
-      // Append new invited member to the list
-      const newMember = res.data.data?.user || res.data.data || res.data.user;
-      setMembers((prev) => [...prev, newMember]);
-      alert(`Invitation sent to ${email}`);
-      setShowModal(false);
-    } catch (err) {
-      console.error("Invite Error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to send invite");
+      const { data } = await axios.post(`${API_URL}/invite`, {
+        useremail: email,
+      });
+      setMembers((prev) => [...prev, data.data]);
+      alert(data.message);
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to invite member");
     }
   };
 
-  // ✅ Remove Member API
+  // Remove member
   const handleRemove = async (id) => {
     if (!window.confirm("Are you sure you want to remove this member?")) return;
 
     try {
-      await axios.delete(`http://localhost:8000/api/v1/users/${id}`);
-      setMembers((prev) => prev.filter((m) => m._id !== id && m.id !== id));
-    } catch (err) {
-      console.error("Remove Error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to remove member");
+      const { data } = await axios.delete(`${API_URL}/${id}`);
+      setMembers((prev) => prev.filter((m) => m._id !== id));
+      alert(data.message);
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to remove member");
     }
   };
 
@@ -194,44 +190,32 @@ const TeamPage = () => {
         {/* Team Table */}
         <div className="bg-white shadow rounded-xl mt-4 overflow-x-auto">
           {loading ? (
-            <p className="text-center text-gray-500 py-6">
+            <p className="text-center py-6 text-gray-500">
               Loading team members...
             </p>
-          ) : error ? (
-            <p className="text-center text-red-500 py-6">{error}</p>
           ) : members.length === 0 ? (
-            <p className="text-center text-gray-500 py-6">
+            <p className="text-center py-6 text-gray-500">
               No team members yet.
             </p>
           ) : (
             <table className="min-w-full border-collapse">
               <thead>
                 <tr className="bg-gray-50 text-gray-600 text-left text-sm uppercase tracking-wider">
-                  <th className="p-4">Name</th>
                   <th className="p-4">Email</th>
-                  <th className="p-4">Role</th>
                   <th className="p-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {members.map((member) => (
                   <tr
-                    key={member._id || member.id}
+                    key={member._id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition"
                   >
-                    <td className="p-4 font-medium text-gray-700">
-                      {member.username || member.name || "N/A"}
-                    </td>
-                    <td className="p-4 text-gray-600">
-                      {member.useremail || member.email}
-                    </td>
-                    <td className="p-4 capitalize text-gray-600">
-                      {member.role}
-                    </td>
+                    <td className="p-4 text-gray-700">{member.email}</td>
                     <td className="p-4 text-center">
-                      {member.role !== "Admin" && (
+                      {member.role?.toLowerCase() !== "admin" && (
                         <button
-                          onClick={() => handleRemove(member._id || member.id)}
+                          onClick={() => handleRemove(member._id)}
                           className="text-red-500 hover:text-red-700 transition"
                         >
                           <Trash2 size={18} />
@@ -246,7 +230,6 @@ const TeamPage = () => {
         </div>
       </div>
 
-      {/* Invite Modal */}
       {showModal && (
         <InviteModal
           onClose={() => setShowModal(false)}
