@@ -33,6 +33,8 @@ router.route("/login").post(loginUser);
 
 router.route("/check").get(verifyAccessToken,authCheck);
 router.route("/refresh-token").post(verifyRefreshToken,refreshToken);
+router.route("/logout").post(registerUser);
+
 
 // router.route("/login").post(loginUser);
 

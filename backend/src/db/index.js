@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 export const connectDB =async ()=>{
     try {
-        const instanceConnection = await mongoose.connect(process.env.MONGO_DB)
-        console.log("mongoDB is connected to Database", instanceConnection);
+        await mongoose.connect("mongodb+srv://blog123:blog123@cluster0.noemrme.mongodb.net/?appName=Cluster0")
+        console.log("mongoDB is connected to Database");
         
     } catch (error) {
         console.log("MongoDb connection error ", error);
