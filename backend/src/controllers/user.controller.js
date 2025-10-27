@@ -282,6 +282,20 @@ export const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "User logged Out"));
 });
 
+export const getUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id).select("-password");
+    if (!user) {
+        throw new ApiError(404, "User not found ")
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, { username: user.username })
+        )
+})
+
+
 export const getTeamMembers = asyncHandler(async (req, res) => {
     const users = await User.find({})
 

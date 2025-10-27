@@ -6,10 +6,12 @@ import {
   submitOtp,
   refreshToken,
   logoutUser,
+  getUserProfile,
   getTeamMembers,
   inviteMember,
   removeMember,
   acceptInvite
+
 } from "../controllers/user.controller.js";
 
 import { verifyAccessToken, verifyRefreshToken } from "../middlewares/auth.middleware.js";
@@ -39,6 +41,8 @@ router.route("/login").post(loginUser);
 router.route("/check").get(verifyAccessToken, authCheck);
 router.route("/refresh-token").post(verifyRefreshToken, refreshToken);
 router.route("/logout").post(verifyAccessToken, logoutUser);
+router.route("/profile").post(verifyAccessToken, getUserProfile);
+
 
 // team page routing 
 router.route("/team").get(verifyAccessToken, getTeamMembers);
