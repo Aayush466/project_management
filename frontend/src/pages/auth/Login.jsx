@@ -86,15 +86,15 @@ const Login = () => {
                     Login
                 </h2>
 
-                {/* Email */}
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={formData.useremail}
-                    onChange={(e) => setFormData({ ...formData, useremail: e.target.value })}
-                    className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
-                    required
-                />
+        {/* Email */}
+        <input
+          type="email"
+          placeholder="Email"
+          value={formData.useremail}
+          onChange={(e) => setFormData({ ...formData, useremail: e.target.value })}
+          className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
+          required
+        />
 
                 {/* Password */}
                 <input
