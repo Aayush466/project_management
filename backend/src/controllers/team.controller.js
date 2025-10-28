@@ -49,12 +49,12 @@ export const inviteMember = asyncHandler(async (req, res) => {
     }
 
     const existingUser = await TeamMember.findOne({ useremail });
-    if (!existingUser) {
-        // User not found, don't send email
-        return res
-            .status(404)
-            .json(new ApiResponse(404, null, "User with this email not found in the database"));
-    }
+    // if (!existingUser) {
+    //     // User not found, don't send email
+    //     return res
+    //         .status(404)
+    //         .json(new ApiResponse(404, null, "User with this email not found in the database"));
+    // }
 
     // Generate invite token and expiration (valid 24 hours)
     const inviteToken = crypto.randomBytes(32).toString("hex");

@@ -18,20 +18,6 @@ import { verifyAccessToken, verifyRefreshToken } from "../middlewares/auth.middl
 
 const router = Router();
 
-// router.route("/register").post(
-//   upload.fields([
-//     {
-//       name: "avatar",
-//       maxCount: 1,
-//     },
-//     {
-//       name: "coverImage",
-//       maxCount: 1,
-//     },
-//   ]),
-//   registerUser
-// );
-
 router.route("/register").post(registerUser);
 
 router.route("/submit-otp").post(submitOtp);
@@ -41,7 +27,7 @@ router.route("/login").post(loginUser);
 router.route("/check").get(verifyAccessToken, authCheck);
 router.route("/refresh-token").post(verifyRefreshToken, refreshToken);
 router.route("/logout").post(verifyAccessToken, logoutUser);
-router.route("/profile").post(verifyAccessToken, getUserProfile);
+router.route("/profile").get(verifyAccessToken, getUserProfile);
 
 
 // team page routing 
