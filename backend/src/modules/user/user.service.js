@@ -19,7 +19,13 @@ export const getAllUsers = async () => {
     path: 'rejectedUsers.user',
     select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
   }).populate({
-    path: 'rejectedAdmins.user',
+    path: 'rejectedAdmins.admin',
+    select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
+  }).populate({
+    path: 'invitedUsers.user',
+    select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
+  }).populate({
+    path: 'invitations.admin',
     select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
   }).populate('myProjects');
 };
@@ -32,7 +38,13 @@ export const getUser = async (id) => {
     path: 'rejectedUsers.user',
     select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
   }).populate({
-    path: 'rejectedAdmins.user',
+    path: 'rejectedAdmins.admin',
+    select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
+  }).populate({
+    path: 'invitedUsers.user',
+    select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
+  }).populate({
+    path: 'invitations.admin',
     select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
   }).populate('myProjects');
 };
