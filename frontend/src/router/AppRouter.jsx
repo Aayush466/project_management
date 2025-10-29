@@ -7,6 +7,8 @@ import Dashboard from "../pages/Dashboard";
 import TeamPage from "../pages/TeamPage";
 import Projects from "../pages/Projects";
 import Notifications from "../pages/Notifications";
+import Invitation from "../pages/Invitation";
+
 import TasksPage from "../pages/TaskPage";
 
 function AppRouter() {
@@ -51,10 +53,10 @@ function AppRouter() {
       />
 
       <Route
-        path="/notifications"
+        path="/invitation"
         element={
           <ProtectedRoute>
-            <Notifications />
+            <Invitation />
           </ProtectedRoute>
         }
       />

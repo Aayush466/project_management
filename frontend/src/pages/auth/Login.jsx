@@ -4,77 +4,64 @@ import { useNavigate, Link } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    useremail: "",
-    userpassword: "",
+    email: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
   const navigate = useNavigate();
 
+  // ✅ Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Step 1: Check if already authenticated
-        const res = await fetch("http://localhost:8000/api/v1/users/check", {
-          credentials: "include", // send cookies
+        const res = await fetch("http://localhost:5000/api/users/profile", {
+          credentials: "include", // include cookies
         });
 
-        if (res.status === 200) {
-          const data = await res.json();
-          if (data?.data?.isAuthenticated) {
-            navigate("/dashboard");
-            return;
-          }
-        }
-
-        // Step 2: Try refreshing token if not authenticated
-        const refreshRes = await axios.post(
-          "http://localhost:8000/api/v1/users/refresh-token",
-          {},
-          { withCredentials: true }
-        );
-
-        if (refreshRes?.data?.isAuthenticated) {
+        const data = await res.json();
+        if (data?.success && data?.data?._id) {
           navigate("/dashboard");
         }
       } catch (error) {
-        console.error("Auth check failed:", error);
-        // Do nothing here — user can continue to login manually
+        console.warn("User not logged in yet.");
       }
     };
 
     checkAuth();
   }, [navigate]);
 
+  // ✅ Handle login form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
+
+
       const response = await axios.post(
-        "http://localhost:8000/api/v1/users/login",
+        "http://localhost:5000/api/auth/login",
         formData,
-        { withCredentials: true }
+        {withCredentials:true}
       );
 
-      console.log("Login Response:", response.data);
-      setMessage("✅ Login successful! Redirecting...");
 
-      // Redirect to dashboard
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1000);
+
+      if (response?.data?.message === "Login successful") {
+        setMessage("✅ Login successful! Redirecting...");
+        setTimeout(() => navigate("/dashboard"), 1000);
+      } else {
+        setMessage("❌ Unexpected response. Please try again.");
+      }
     } catch (error) {
       console.error("Login Error:", error.response || error.message);
-      setMessage(
-        error.response?.data?.message || "❌ Invalid email or password."
-      );
+      setMessage(error?.message || "❌ Invalid credentials.");
     } finally {
       setLoading(false);
     }
   };
+
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
@@ -90,8 +77,8 @@ const Login = () => {
         <input
           type="email"
           placeholder="Email"
-          value={formData.useremail}
-          onChange={(e) => setFormData({ ...formData, useremail: e.target.value })}
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
           required
         />
@@ -100,9 +87,9 @@ const Login = () => {
                 <input
                     type="password"
                     placeholder="Password"
-                    value={formData.userpassword}
+                    value={formData.password}
                     onChange={(e) =>
-                        setFormData({ ...formData, userpassword: e.target.value })
+                        setFormData({ ...formData, password: e.target.value })
                     }
                     className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
                     required

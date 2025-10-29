@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Bell, Upload } from "lucide-react";
 
-const Topbar = () => {
+const Topbar = ({userName}) => {
   const [user, setUser] = useState({
     username: "Loading...",
     avatar: null,
@@ -14,15 +14,9 @@ const Topbar = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8000/api/v1/users/profile",
-          { withCredentials: true }
-        );
-
-        const userData = response.data?.data || {};
         setUser({
-          username: userData.username || "User",
-          avatar: userData.avatar || null,
+          username: userName,
+          avatar: null,
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -99,7 +93,9 @@ const Topbar = () => {
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (
-            <span>{user.username ? user.username.charAt(0).toUpperCase() : "U"}</span>
+            <span>
+              {user.username ? user.username.charAt(0).toUpperCase() : "U"}
+            </span>
           )}
 
           {/* Hidden File Input */}

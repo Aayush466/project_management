@@ -21,21 +21,21 @@ const Register = () => {
     const checkAuth = async () => {
       try {
         // Step 1: Check if user is already logged in
-        const res = await fetch("http://localhost:8000/api/v1/users/check", {
-          credentials: "include", // send cookies
-        });
+        // const res = await fetch("http://localhost:8000/api/v1/users/check", {
+        //   credentials: "include", // send cookies
+        // });
 
-        if (res.status === 200) {
-          const data = await res.json();
-          if (data?.data?.isAuthenticated) {
-            navigate("/dashboard");
-            return;
-          }
-        }
+        // if (res.status === 200) {
+        //   const data = await res.json();
+        //   if (data?.data?.isAuthenticated) {
+        //     navigate("/dashboard");
+        //     return;
+        //   }
+        // }
 
         // Step 2: Try refreshing token if not authenticated
         const refreshRes = await axios.post(
-          "http://localhost:8000/api/v1/users/refresh-token",
+          "localhost:5000/api/auth/refresh-token",
           {},
           { withCredentials: true }
         );
@@ -60,20 +60,20 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/v1/users/register",
+        "http://localhost:5000/api/users/register",
         {
-          username: formData.username,
-          useremail: formData.useremail,
-          userpassword: formData.userpassword,
-          role: formData.role,
+          name: formData.username,
+          email: formData.useremail,
+          password: formData.userpassword,
         },
         {
           headers: { "Content-Type": "application/json" },
-          withCredentials: true,
         }
       );
 
-      setMessage("✅ Registration successful! Please check your email for OTP.");
+      setMessage(
+        "✅ Registration successful! Please check your email for OTP."
+      );
       setStep("verify");
     } catch (error) {
       console.error("Axios Error:", error);
@@ -96,13 +96,12 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/v1/users/submit-otp",
+        "http://localhost:5000/api/auth/submit-otp",
         {
-          useremail: formData.useremail,
-          userpassword: formData.userpassword,
+          email: formData.useremail,
           otp,
         },
-        { withCredentials: true }
+        {withCredentials:true}
       );
 
       setMessage("✅ User verified successfully! Redirecting...");
@@ -113,7 +112,7 @@ const Register = () => {
       console.error("OTP Error:", error);
       setMessage(
         `❌ ${
-          error.response?.data?.message ||
+          error.response?.message ||
           "OTP verification failed. Please try again."
         }`
       );
@@ -168,20 +167,6 @@ const Register = () => {
               required
             />
 
-            {/* Role */}
-            <select
-              value={formData.role}
-              onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
-              }
-              className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#7B3931]"
-              required
-            >
-              <option value="">Select Role</option>
-              <option value="Admin">Admin</option>
-              <option value="User">User</option>
-            </select>
-
             {/* Submit */}
             <button
               type="submit"
@@ -235,16 +220,21 @@ const Register = () => {
         {/* ========================== MESSAGE ========================== */}
         {message && (
           <p
-            className={`mt-4 text-center ${message.includes("✅") ? "text-green-600" : "text-red-600"
-              }`}
+            className={`mt-4 text-center ${
+              message.includes("✅") ? "text-green-600" : "text-red-600"
+            }`}
           >
             {message}
           </p>
         )}
-        <p
-          className="mt-4 text-center text-gray-600 text-sm sm:text-base flex justify-center gap-2"
-        >Already have an account?{" "}
-          <Link to="/login" className="text-[#7B3931] font-semibold hover:underline">Login</Link>
+        <p className="mt-4 text-center text-gray-600 text-sm sm:text-base flex justify-center gap-2">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="text-[#7B3931] font-semibold hover:underline"
+          >
+            Login
+          </Link>
         </p>
       </div>
     </div>

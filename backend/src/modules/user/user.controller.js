@@ -59,34 +59,34 @@ export const sendInvite = async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email, verified: true }).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
 
     if (!user) {
-        return res.status(400).json({ message: "User not Exists, can't send Invite" });
+      return res.status(400).json({ message: "User not Exists, can't send Invite" });
     }
 
     if (user._id.equals(req.user._id)) {
-        return res.status(400).json({ message: "Cannot send invite to yourself" });
+      return res.status(400).json({ message: "Cannot send invite to yourself" });
     }
 
     if (req.user.invitedUsers.includes(req.body.email)) {
-        return res.status(400).json({ message: "Invite already sent to this user" });
+      return res.status(400).json({ message: "Invite already sent to this user" });
     }
 
     if (req.user.rejectedUsers.includes(user._id)) {
-        return res.status(400).json({ message: "User already rejected invitation, can't sent again" });
+      return res.status(400).json({ message: "User already rejected invitation, can't sent again" });
     }
 
     if(req.user.myUsers.includes(user._id)){
-        return res.status(400).json({ message: "user already accepted invitation, can't sent again" });
+      return res.status(400).json({ message: "user already accepted invitation, can't sent again" });
     }
 
     await User.findByIdAndUpdate(req.user._id, {
-        $addToSet: { invitedUsers: req.body.email }
+      $addToSet: { invitedUsers: req.body.email }
     });
 
-     user.invitations.push(req.user.email);
+    user.invitations.push(req.user.email);
     await user.save();
 
     sendInviteEmail(user.email,user.name, req.user.email);
-    
+
     res
       .status(201)
       .json({ success: true, message: `Invite sent successfully`, data:user });
@@ -100,11 +100,11 @@ export const acceptInvite = async (req, res, next) => {
     const admin = await User.findOne({ email: req.body.email, verified: true }).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
 
     if (!admin) {
-        return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
+      return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
     }
 
     if (!req.user.invitations.includes(req.body.email)) {
-        return res.status(400).json({ message: "Invitation not exists" });
+      return res.status(400).json({ message: "Invitation not exists" });
     }
 
     const user = await User.findOne(req.user._id).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
@@ -117,7 +117,7 @@ export const acceptInvite = async (req, res, next) => {
     await admin.save();
 
     sendAcceptEmail(admin.email,admin.name, req.user.name);
-    
+
     res
       .status(201)
       .json({ success: true, message: `Invite accept successfully`, data:admin });
@@ -131,11 +131,11 @@ export const rejectInvite = async (req, res, next) => {
     const admin = await User.findOne({ email: req.body.email, verified: true }).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
 
     if (!admin) {
-        return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
+      return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
     }
 
     if (!req.user.invitations.includes(req.body.email)) {
-        return res.status(400).json({ message: "Invitation not exists" });
+      return res.status(400).json({ message: "Invitation not exists" });
     }
 
     const user = await User.findOne(req.user._id).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
@@ -149,7 +149,7 @@ export const rejectInvite = async (req, res, next) => {
     await admin.save();
 
     sendRejectEmail(admin.email,admin.name, req.user.name);
-    
+
     res
       .status(201)
       .json({ success: true, message: `Invite rejected successfully`, data:admin });

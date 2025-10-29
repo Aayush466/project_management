@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.get('/all',authMiddleware, getUsers);
 router.get('/profile',authMiddleware, getUser);
+// router.get('/invitations', authMiddleware, getInvitations);
 router.post('/register', validateBody(createUserSchema), createUser);
 router.post('/send-invite', validateBody(sendInviteSchema),authMiddleware, sendInvite);
 router.post('/accept-invite', validateBody(acceptInviteSchema),authMiddleware, acceptInvite);

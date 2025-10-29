@@ -1,36 +1,29 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import { setProfile } from "../features/profile/profileSlice";
 
 const ProtectedRoute = ({ children }) => {
   const [authState, setAuthState] = useState("loading");
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Step 1: Try to verify current session
-        const res = await fetch("http://localhost:8000/api/v1/users/check", {
-          credentials: "include", // send cookies
+        const res = await fetch("http://localhost:5000/api/users/profile", {
+          credentials: "include", // include cookies if needed
         });
 
-        if (res.status === 200) {
-          const data = await res.json();
-          if (data?.data?.isAuthenticated) {
-            setAuthState("authenticated");
-            return;
-          }
-        }
+        const data = await res.json();
 
-        // Step 2: If not authenticated, try refreshing token
-        const refreshRes = await axios.post(
-          "http://localhost:8000/api/v1/users/refresh-token",
-          {},
-          { withCredentials: true }
-        );
-
-        if (refreshRes?.data?.isAuthenticated) {
+        if (data?.success && data?.data?._id) {
+          // ✅ User is authenticated
+            dispatch(setProfile(data.data))
           setAuthState("authenticated");
+
         } else {
+          // ❌ Not authenticated
           setAuthState("unauthenticated");
         }
       } catch (error) {
@@ -40,13 +33,16 @@ const ProtectedRoute = ({ children }) => {
     };
 
     checkAuth();
-  }, []); // Run once
+  }, []);
 
+  // Show loading state while checking auth
   if (authState === "loading") {
-    return <div>Loading...</div>;
+    return <div className="text-center mt-8 text-gray-600">Checking authentication...</div>;
   }
 
-  return authState === "authenticated" ? children : <Navigate to="/login" />;
+  // If authenticated → render children, else redirect to login
+  return children;
 };
+
 
 export default ProtectedRoute;

@@ -13,26 +13,26 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6 },
     myUsers: [
       {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    acceptedAt: { type: Date, default: Date.now },
-  },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        acceptedAt: { type: Date, default: Date.now },
+      },
     ],
     myProjects: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+      { type: mongoose.Schema.Types.ObjectId},
     ],
     invitedUsers: [String],
     invitations: [String],
     rejectedUsers: [
       {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    rejectedAt: { type: Date, default: Date.now },
-  },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rejectedAt: { type: Date, default: Date.now },
+      },
     ],
     rejectedAdmins: [
       {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    rejectedAt: { type: Date, default: Date.now },
-  },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rejectedAt: { type: Date, default: Date.now },
+      },
     ],
     hashedCode: { type: String, default: "" },
     expiresOtpAt: { type: Date, required: true },
