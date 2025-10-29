@@ -158,3 +158,35 @@ export const rejectInvite = async (req, res, next) => {
     next(err);
   }
 };
+
+// export const deleteMember = async(req, res , next ) =>{
+//    try {
+//     const { memberId } = req.params; // Assume the member ID is sent as a URL parameter
+
+//     if (!memberId) {
+//       return res.status(400).json({ message: "Member ID is required" });
+//     }
+
+//     // Check if the member exists
+//     const member = await Member.findById(memberId);
+//     if (!member) {
+//       return res.status(404).json({ message: "Member not found" });
+//     }
+
+//     // Delete the member from the database
+//     await Member.findByIdAndDelete(memberId);
+
+//     // Optionally, if you want to handle relationships (like deleting the member from other documents or updating lists):
+//     // For example, if the member is part of a team or group:
+//     // const team = await Team.findOne({ members: memberId });
+//     // if (team) {
+//     //   await Team.updateOne({ _id: team._id }, { $pull: { members: memberId } });
+//     // }
+
+//     return res.status(200).json({ message: "Member deleted successfully" });
+//   } catch (error) {
+//     console.error("Error deleting member:", error);
+//     next(error); // Call the next middleware (error handler)
+//   }
+
+// }

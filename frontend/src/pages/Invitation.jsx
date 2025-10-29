@@ -1,56 +1,85 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
-import { CheckCircle, Mail, XCircle } from "lucide-react";
-import { useSelector, useDispatch } from 'react-redux';
-import { setProfile } from '../features/profile/profileSlice';
-import { useEffect } from "react";
+import { Mail } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { setProfile } from "../features/profile/profileSlice";
+import axios from "axios"; // Don't forget to import axios
 
 const Invitation = () => {
   const user = useSelector((state) => state.profile.user);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: "invite",
-      message: "Invitation sent to john@example.com",
-      status: "unread",
-      time: "2h ago",
-    },
-    {
-      id: 2,
-      type: "task",
-      message: "Ayush completed the task 'UI Design'",
-      status: "read",
-      time: "4h ago",
-    },
-    {
-      id: 3,
-      type: "invite",
-      message: "Invitation sent to riya@example.com",
-      status: "unread",
-      time: "1d ago",
-    },
-  ]);
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-}, [user]);
+  useEffect(() => {}, [user]);
 
-  const markAsRead = (id) => {
-    setNotifications(
-      notifications.map((notif) =>
-        notif.id === id ? { ...notif, status: "read" } : notif
-      )
-    );
+  const accept = async (email) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/accept-invite",
+        { email },
+        { withCredentials: true }
+      );
+
+      console.log("Invite accepted successfully:", response.data);
+
+      // Filter out the accepted invitation from the list of invitations
+      const updatedInvitations = user.invitations.filter(
+        (invitation) => invitation.admin.email !== email
+      );
+
+      // Optionally update the state in Redux or locally
+      dispatch(setProfile({ ...user, invitations: updatedInvitations }));
+
+      // Re-fetch the user profile to ensure it's up-to-date
+      const res = await fetch("http://localhost:5000/api/users/profile", {
+        credentials: "include", // include cookies if needed
+      });
+
+      const data = await res.json();
+
+      if (data?.success && data?.data?._id) {
+        // User is authenticated, update Redux state with the latest user data
+        dispatch(setProfile(data.data));
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error accepting invite:",
+        error.response?.data || error.message
+      );
+    }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter((notif) => notif.id !== id));
+  const reject = async (email) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/reject-invite",
+        { email },
+        { withCredentials: true }
+      );
+
+      console.log("Invitation has been rejected:", response.data);
+
+      // Optionally remove the rejected invitation from the UI
+      const updatedInvitations = user.invitations.filter(
+        (invitation) => invitation.admin.email !== email
+      );
+
+      dispatch(setProfile({ ...user, invitations: updatedInvitations }));
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error rejecting invite:",
+        error.response?.data || error.message
+      );
+    }
   };
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
       <Sidebar />
-
       <div className="flex-1 p-6 space-y-6">
         <Topbar userName={user.name} />
 
@@ -64,45 +93,38 @@ const Invitation = () => {
           )}
 
           <ul className="space-y-4">
-            {user.invitations.map((invitation,index) => (
-              <li>{invitation}</li>
-              // <li
-              //   key={index}
-              //   className={`flex justify-between items-center p-4 rounded-lg border ${
-              //     notif.status === "unread"
-              //       ? "bg-blue-50 border-blue-200"
-              //       : "bg-gray-50 border-gray-200"
-              //   }`}
-              // >
-              //   <div className="flex items-center space-x-3">
-              //     {notif.type === "invite" ? (
-              //       <Mail className="text-blue-500" />
-              //     ) : (
-              //       <CheckCircle className="text-green-500" />
-              //     )}
-              //     <div>
-              //       <p className="text-gray-700">{notif.message}</p>
-              //       <span className="text-xs text-gray-400">{notif.time}</span>
-              //     </div>
-              //   </div>
+            {user.invitations.map((invitation, index) => (
+              <li
+                key={index}
+                className="flex justify-between items-center p-4 rounded-lg border bg-blue-50 border-blue-200"
+              >
+                <div className="flex items-center space-x-3">
+                  <Mail className="text-blue-500" />
+                  <div>
+                    <p className="text-gray-700">
+                      {invitation.admin.name} sent you an invitation
+                    </p>
+                    <span className="text-xs text-gray-400">
+                      {invitation.invitedAt}
+                    </span>
+                  </div>
+                </div>
 
-              //   <div className="flex items-center space-x-3">
-              //     {notif.status === "unread" && (
-              //       <button
-              //         onClick={() => markAsRead(notif.id)}
-              //         className="text-sm text-blue-600 hover:underline"
-              //       >
-              //         Mark as read
-              //       </button>
-              //     )}
-              //     <button
-              //       onClick={() => deleteNotification(notif.id)}
-              //       className="text-red-500 hover:text-red-700"
-              //     >
-              //       <XCircle size={20} />
-              //     </button>
-              //   </div>
-              // </li>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => accept(invitation.admin.email)} // Accept the invitation
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => reject(invitation.admin.email)} // Reject the invitation
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </li>
             ))}
           </ul>
         </div>

@@ -1,18 +1,20 @@
-
 // shiva code
 import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import InviteModal from "../components/InviteModal";
+import { useSelector, useDispatch } from "react-redux";
+import { setProfile } from "../features/profile/profileSlice";
 import { UserPlus, Trash2 } from "lucide-react";
 import axios from "axios";
 
 const TeamPage = () => {
   const [showModal, setShowModal] = useState(false);
+  const user = useSelector((state) => state.profile.user);
   const [members, setMembers] = useState([
-    { id: 1, name: "Ayush Shah", email: "ayush@gmail.com", role: "admin" },
-    { id: 2, name: "Riya Mehta", email: "riya@gmail.com", role: "user" },
-    { id: 3, name: "Karan Patel", email: "karan@gmail.com", role: "user" },
+    { id: 1, name: "Ayush Shah", email: "ayush@gmail.com" },
+    { id: 2, name: "Riya Mehta", email: "riya@gmail.com" },
+    { id: 3, name: "Karan Patel", email: "karan@gmail.com" },
   ]);
   const [message, setMessage] = useState("");
 
@@ -96,32 +98,30 @@ const TeamPage = () => {
               <tr className="bg-gray-50 text-gray-600 text-left text-sm uppercase tracking-wider">
                 <th className="p-4">Name</th>
                 <th className="p-4">Email</th>
-                <th className="p-4">Role</th>
+                {/* <th className="p-4">Role</th> */}
                 <th className="p-4 text-center">Action</th>
               </tr>
             </thead>
             <tbody>
-              {members.map((member) => (
+              {user.myUsers.map((user,index) => (
                 <tr
-                  key={member.id}
+                  key={index}
                   className="border-b border-gray-100 hover:bg-gray-50 transition"
                 >
                   <td className="p-4 font-medium text-gray-700">
-                    {member.name}
+                    {user.user.name}
                   </td>
-                  <td className="p-4 text-gray-600">{member.email}</td>
-                  <td className="p-4 capitalize text-gray-600">
+                  <td className="p-4 text-gray-600">{user.user.email}</td>
+                  {/* <td className="p-4 capitalize text-gray-600">
                     {member.role}
-                  </td>
+                  </td> */}
                   <td className="p-4 text-center">
-                    {member.role !== "admin" && (
                       <button
-                        onClick={() => handleRemove(member.id)}
+                        onClick={() => handleRemove("")}
                         className="text-red-500 hover:text-red-700 transition"
                       >
                         <Trash2 size={18} />
                       </button>
-                    )}
                   </td>
                 </tr>
               ))}

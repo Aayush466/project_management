@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { setProfile } from "../features/profile/profileSlice";
@@ -7,6 +7,7 @@ import { setProfile } from "../features/profile/profileSlice";
 const ProtectedRoute = ({ children }) => {
   const [authState, setAuthState] = useState("loading");
   const dispatch = useDispatch();
+  const navigate = useNavigate()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -25,10 +26,14 @@ const ProtectedRoute = ({ children }) => {
         } else {
           // ❌ Not authenticated
           setAuthState("unauthenticated");
+          navigate("/login")
+
         }
       } catch (error) {
         console.error("Error checking auth:", error);
         setAuthState("unauthenticated");
+          navigate("/login")
+
       }
     };
 

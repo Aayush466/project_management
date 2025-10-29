@@ -23,7 +23,7 @@ const Login = () => {
         if (data?.success && data?.data?._id) {
           navigate("/dashboard");
         }
-      } catch (error) {
+      } catch (error) { 
         console.warn("User not logged in yet.");
       }
     };
@@ -56,7 +56,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login Error:", error.response || error.message);
-      setMessage(error?.message || "❌ Invalid credentials.");
+      setMessage(error.response.data.message || "❌ Invalid credentials.");
     } finally {
       setLoading(false);
     }

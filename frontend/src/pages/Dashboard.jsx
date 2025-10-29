@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import StatCard from "../components/StatCard";
+import { useSelector, useDispatch } from 'react-redux';
+import { setProfile } from '../features/profile/profileSlice';
 import { Users, FolderKanban, ListChecks, CheckCircle } from "lucide-react";
 import axios from "axios";
 
 export default function Dashboard() {
+  const user = useSelector((state) => state.profile.user);
   const [stats, setStats] = useState({
     totalProjects: 0,
     totalMembers: 0,
@@ -96,7 +99,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="flex-1 p-6 space-y-6">
-        <Topbar userName="Ayush" />
+        <Topbar userName={user.name} />
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">

@@ -20,22 +20,11 @@ const Register = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Step 1: Check if user is already logged in
-        // const res = await fetch("http://localhost:8000/api/v1/users/check", {
-        //   credentials: "include", // send cookies
-        // });
-
-        // if (res.status === 200) {
-        //   const data = await res.json();
-        //   if (data?.data?.isAuthenticated) {
-        //     navigate("/dashboard");
-        //     return;
-        //   }
-        // }
+       
 
         // Step 2: Try refreshing token if not authenticated
         const refreshRes = await axios.post(
-          "localhost:5000/api/auth/refresh-token",
+          "http://localhost:5000/api/auth/refresh-token",
           {},
           { withCredentials: true }
         );
