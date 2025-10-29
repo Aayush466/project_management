@@ -18,7 +18,7 @@ const Sidebar = () => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/logout",
+        "https://projectmanagement-backend.up.railway.app/api/auth/logout",
         {},
         {
           withCredentials: true, // important if backend uses cookies

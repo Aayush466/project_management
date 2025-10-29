@@ -15,7 +15,7 @@ const Login = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/users/profile", {
+        const res = await fetch("https://projectmanagement-backend.up.railway.app/api/users/profile", {
           credentials: "include", // include cookies
         });
 
@@ -41,7 +41,7 @@ const Login = () => {
 
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        "https://projectmanagement-backend.up.railway.app/api/auth/login",
         formData,
         {withCredentials:true}
       );

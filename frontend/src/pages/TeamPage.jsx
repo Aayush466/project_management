@@ -23,7 +23,7 @@ const TeamPage = () => {
     try {
       setMessage("Sending invite...");
       const res = await axios.post(
-        "http://localhost:5000/api/users/send-invite",
+        "https://projectmanagement-backend.up.railway.app/api/users/send-invite",
         { email },
         { withCredentials: true } // ✅ Include cookies for auth
       );

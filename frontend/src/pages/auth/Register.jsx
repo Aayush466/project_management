@@ -24,7 +24,7 @@ const Register = () => {
 
         // Step 2: Try refreshing token if not authenticated
         const refreshRes = await axios.post(
-          "http://localhost:5000/api/auth/refresh-token",
+          "https://projectmanagement-backend.up.railway.app/api/auth/refresh-token",
           {},
           { withCredentials: true }
         );
@@ -49,7 +49,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/register",
+        "https://projectmanagement-backend.up.railway.app/api/users/register",
         {
           name: formData.username,
           email: formData.useremail,
@@ -85,7 +85,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/submit-otp",
+        "https://projectmanagement-backend.up.railway.app/api/auth/submit-otp",
         {
           email: formData.useremail,
           otp,

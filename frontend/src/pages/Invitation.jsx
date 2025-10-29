@@ -15,7 +15,7 @@ const Invitation = () => {
   const accept = async (email) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/accept-invite",
+        "https://projectmanagement-backend.up.railway.app/api/users/accept-invite",
         { email },
         { withCredentials: true }
       );
@@ -31,7 +31,7 @@ const Invitation = () => {
       dispatch(setProfile({ ...user, invitations: updatedInvitations }));
 
       // Re-fetch the user profile to ensure it's up-to-date
-      const res = await fetch("http://localhost:5000/api/users/profile", {
+      const res = await fetch("https://projectmanagement-backend.up.railway.app/api/users/profile", {
         credentials: "include", // include cookies if needed
       });
 
@@ -54,7 +54,7 @@ const Invitation = () => {
   const reject = async (email) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/reject-invite",
+        "https://projectmanagement-backend.up.railway.app/api/users/reject-invite",
         { email },
         { withCredentials: true }
       );

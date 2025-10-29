@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/users/profile", {
+        const res = await fetch("https://projectmanagement-backend.up.railway.app/api/users/profile", {
           credentials: "include", // include cookies if needed
         });
 
