@@ -18,10 +18,10 @@ const userSchema = new mongoose.Schema(
   },
     ],
     myProjects: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+      { type: mongoose.Schema.Types.ObjectId},
     ],
-    invitedUsers: [String],
-    invitations: [String],
+    invitedUsers: [{user:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],
+    invitations: [{admin:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],
     rejectedUsers: [
       {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -30,7 +30,12 @@ const userSchema = new mongoose.Schema(
     ],
     rejectedAdmins: [
       {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    rejectedAt: { type: Date, default: Date.now },
+  },
+    ], acceptedAdmins: [
+      {
+    admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     rejectedAt: { type: Date, default: Date.now },
   },
     ],

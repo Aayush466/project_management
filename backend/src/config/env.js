@@ -14,7 +14,8 @@ const environmentVariables = {
   service: process.env.SERVICE,
   email: process.env.EMAIL,
   appPassword: process.env.APP_PASSWORD,
-  nodeEnv: process.env.NODE_ENV
+  nodeEnv: process.env.NODE_ENV,
+  corsOrigin: process.env.CORS_ORIGIN,
 };
 
 export default environmentVariables;
