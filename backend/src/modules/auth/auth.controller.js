@@ -49,14 +49,14 @@ export const submitUserOtp = async (req, res, next) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "None" : "lax",
       maxAge: 15 * 60 * 1000, // 15 min
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "None" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/api/auth",
     });
@@ -93,14 +93,14 @@ export const login = async (req, res, next) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "None" : "lax",
       maxAge: 15 * 60 * 1000, // 15 min
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "None" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/api/auth",
     });
@@ -130,7 +130,7 @@ export const refreshToken = async (req, res) => {
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "None" : "lax",
       maxAge: 15 * 60 * 1000,
     });
 
@@ -158,13 +158,13 @@ export const logout = async (req, res) => {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "None" : "lax",
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "strict" : "lax",
+      sameSite: isProd ? "None" : "lax",
       path: "/api/auth",
     });
 
