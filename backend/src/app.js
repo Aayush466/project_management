@@ -4,15 +4,11 @@ import cors from "cors";
 import userRoutes from './modules/user/user.routes.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import errorHandler from './middleware/error.middleware.js';
+import environmentVariables from './config/env.js';
 
 const app = express();
 
-app.use(
-    cors({
-        origin: "http://localhost:5173",
-        credentials: true,
-    })
-);
+app.use(cors({origin: environmentVariables.corsOrigin, credentials: true}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())

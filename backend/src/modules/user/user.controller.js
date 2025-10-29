@@ -66,23 +66,23 @@ export const sendInvite = async (req, res, next) => {
       return res.status(400).json({ message: "Cannot send invite to yourself" });
     }
 
-    if (req.user.invitedUsers.includes(req.body.email)) {
-      return res.status(400).json({ message: "Invite already sent to this user" });
+    if (req.user.invitedUsers.some(u => u.user.equals(user._id))) {
+        return res.status(400).json({ message: "Invite already sent to this user" });
     }
 
-    if (req.user.rejectedUsers.includes(user._id)) {
-      return res.status(400).json({ message: "User already rejected invitation, can't sent again" });
+    if (req.user.rejectedUsers.some(u => u.user.equals(user._id))) {
+        return res.status(400).json({ message: "User already rejected invitation, can't sent again" });
     }
 
-    if(req.user.myUsers.includes(user._id)){
-      return res.status(400).json({ message: "user already accepted invitation, can't sent again" });
+    if(req.user.myUsers.some(u => u.user.equals(user._id))){
+        return res.status(400).json({ message: "user already accepted invitation, can't sent again" });
     }
 
     await User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { invitedUsers: req.body.email }
+        $addToSet: { invitedUsers: {user:user._id} }
     });
 
-    user.invitations.push(req.user.email);
+     user.invitations.push({admin:req.user._id});
     await user.save();
 
     sendInviteEmail(user.email,user.name, req.user.email);
@@ -103,17 +103,18 @@ export const acceptInvite = async (req, res, next) => {
       return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
     }
 
-    if (!req.user.invitations.includes(req.body.email)) {
-      return res.status(400).json({ message: "Invitation not exists" });
+    if (!req.user.invitations.some(u => u.admin.equals(admin._id))) {
+        return res.status(400).json({ message: "Invitation not exists" });
     }
 
     const user = await User.findOne(req.user._id).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
 
-    user.invitations.pull(admin.email);
+    user.invitations.pull({admin:admin._id});
+    user.acceptedAdmins.push({admin:admin._id});
     await user.save();
 
-    admin.invitedUsers.pull(req.user.email);
-    admin.myUsers.push(req.user._id);
+    admin.invitedUsers.pull({user:req.user._id});
+    admin.myUsers.push({user:req.user._id});
     await admin.save();
 
     sendAcceptEmail(admin.email,admin.name, req.user.name);
@@ -134,18 +135,18 @@ export const rejectInvite = async (req, res, next) => {
       return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
     }
 
-    if (!req.user.invitations.includes(req.body.email)) {
-      return res.status(400).json({ message: "Invitation not exists" });
+    if (!req.user.invitations.some(u => u.admin.equals(admin._id))) {
+        return res.status(400).json({ message: "Invitation not exists" });
     }
 
     const user = await User.findOne(req.user._id).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
 
-    user.invitations.pull(admin.email);
-    user.rejectedAdmins.push(admin._id);
+    user.invitations.pull({admin:admin._id});
+    user.rejectedAdmins.push({admin:admin._id});
     await user.save();
 
-    admin.invitedUsers.pull(req.user.email);
-    admin.rejectedUsers.push(req.user._id);
+    admin.invitedUsers.pull({user:req.user._id});
+    admin.rejectedUsers.push({user:req.user._id});
     await admin.save();
 
     sendRejectEmail(admin.email,admin.name, req.user.name);
