@@ -22,7 +22,9 @@ import Topbar from "../components/Topbar";
 const TaskDetailModal = ({ task, listName, onClose, onUpdateTask }) => {
   const [description, setDescription] = useState(task.description);
   const [showDeleteOption, setShowDeleteOption] = useState(false);
-  const [originalDescription, setOriginalDescription] = useState(task.description);
+  const [originalDescription, setOriginalDescription] = useState(
+    task.description
+  );
 
   const handleDescriptionSave = () => {
     onUpdateTask(task.id, { description });
@@ -35,7 +37,7 @@ const TaskDetailModal = ({ task, listName, onClose, onUpdateTask }) => {
 
   return (
     <div
-      className="fixed inset-0  flex justify-center items-start pt-10 z-50 overflow-y-auto"  //bg-black bg-opacity-50
+      className="fixed inset-0  flex justify-center items-start pt-10 z-50 overflow-y-auto" //bg-black bg-opacity-50
       onClick={onClose}
     >
       <div
@@ -121,12 +123,22 @@ const TaskDetailModal = ({ task, listName, onClose, onUpdateTask }) => {
                   <button className="flex items-center text-sm font-semibold">
                     Aa <span className="text-xs ml-1">v</span>
                   </button>
-                  <button className="text-lg"><FiBold /></button>
-                  <button className="text-lg"><FiItalic /></button>
+                  <button className="text-lg">
+                    <FiBold />
+                  </button>
+                  <button className="text-lg">
+                    <FiItalic />
+                  </button>
                   <span className="text-gray-300">|</span>
-                  <button className="text-lg"><FiLink /></button>
-                  <button className="text-lg"><FiImage /></button>
-                  <button className="text-lg"><FiPlus /></button>
+                  <button className="text-lg">
+                    <FiLink />
+                  </button>
+                  <button className="text-lg">
+                    <FiImage />
+                  </button>
+                  <button className="text-lg">
+                    <FiPlus />
+                  </button>
                 </div>
               </div>
 
@@ -448,35 +460,35 @@ const Projects = () => {
 
 export default Projects;
 
-
 {
-  function conquor(arr, f , m , l){
-    let temp = new Array(l-f+1);
-    let i  = f , j = mid+1; k =0;
+  function conquor(arr, f, m, l) {
+    let temp = new Array(l - f + 1);
+    let i = f,
+      j = mid + 1;
+    k = 0;
 
-    while(i<=mid && j<=last){
-      if(arr[i] < arr[j]){
-        temp[k++] =arr[i++]
-      } else temp [k++] = arr[j++]
+    while (i <= mid && j <= last) {
+      if (arr[i] < arr[j]) {
+        temp[k++] = arr[i++];
+      } else temp[k++] = arr[j++];
     }
 
-    while(i <= mid ){
-      temp [k++] = arr[i++]
+    while (i <= mid) {
+      temp[k++] = arr[i++];
     }
 
-    while(j<=last){
-      temp[k++] = arr [i++]
+    while (j <= last) {
+      temp[k++] = arr[i++];
     }
   }
 
-
-  function divide(arr , first , last ){
-    if(first>=last) return 
-    let mid = Math.floor((first+last ) / 2);
-    divide(arr , first , mid)
-    divide(arr, mid +1 , last )
-    conquor(arr,  first , mid , last )
+  function divide(arr, first, last) {
+    if (first >= last) return;
+    let mid = Math.floor((first + last) / 2);
+    divide(arr, first, mid);
+    divide(arr, mid + 1, last);
+    conquor(arr, first, mid, last);
   }
 
-  let arr 
+  let arr;
 }
