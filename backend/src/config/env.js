@@ -14,6 +14,10 @@ const environmentVariables = {
   service: process.env.SERVICE,
   email: process.env.EMAIL,
   appPassword: process.env.APP_PASSWORD,
+  cloudinaryFolderName:process.env.CLOUDINARY_FOLDER_NAME,
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
   nodeEnv: process.env.NODE_ENV,
   corsOrigin: process.env.CORS_ORIGIN,
 };
