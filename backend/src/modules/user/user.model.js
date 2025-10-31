@@ -17,8 +17,8 @@ const userSchema = new mongoose.Schema(
     acceptedAt: { type: Date, default: Date.now },
   },
     ],
-    myProjects: [
-      { type: mongoose.Schema.Types.ObjectId},
+    myBoards: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Board" },
     ],
     invitedUsers: [{user:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],
     invitations: [{admin:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],

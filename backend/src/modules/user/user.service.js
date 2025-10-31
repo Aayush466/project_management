@@ -27,7 +27,7 @@ export const getAllUsers = async () => {
   }).populate({
     path: 'invitations.admin',
     select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
-  }).populate('myProjects');
+  }).populate('myBoards');
 };
 
 export const getUser = async (id) => {
@@ -46,7 +46,17 @@ export const getUser = async (id) => {
   }).populate({
     path: 'invitations.admin',
     select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
-  }).populate('myProjects');
+  }).populate({
+    path: "myBoards",
+    populate: {
+      path: "lists", // nested field inside Board
+      model: "List",
+      populate: {
+      path: "cards", // nested field inside Board
+      model: "Card"
+    }
+    }
+  });
 };
 
 export const deleteUser = async (data) => {
