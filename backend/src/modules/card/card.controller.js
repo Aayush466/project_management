@@ -125,7 +125,16 @@ export const updateCard = async (req, res, next) => {
     card.color = req.body.color || card.color;
     card.status = req.body.status || card.status;
     card.priority = req.body.priority || card.priority;
-    card.dueDateTime = req.body.dueDateTime || card.dueDateTime;
+    if (req.body.dueDateTime === "none" || req.body.dueDateTime === "") {
+      // If "none" or empty → clear dueDateTime
+      card.dueDateTime = null;
+    } else if (req.body.dueDateTime) {
+      // If date provided → update date
+      card.dueDateTime = req.body.dueDateTime;
+    } else {
+      // If not provided → keep existing
+      card.dueDateTime = card.dueDateTime;
+    }
     card.checkLists = req.body.checkLists
       ? JSON.parse(req.body.checkLists)
       : card.checkLists;

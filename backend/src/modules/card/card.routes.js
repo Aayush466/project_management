@@ -7,7 +7,6 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../../utils/claudinary.js";
 import environmentVariables from '../../config/env.js';
 import multer from "multer";
-
 // Configure storage to Cloudinary
 const storage = new CloudinaryStorage({
   cloudinary,

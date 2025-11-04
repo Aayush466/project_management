@@ -32,9 +32,14 @@ export const updateCardSchema = Joi.object({
     .default("green"),
   status: Joi.string().valid("none", "completed", "pending").default("none"),
   priority: Joi.string().valid("none", "high", "normal", "low").default("none"),
-  dueDateTime: Joi.date().iso().min('now').messages({
-  'date.min': 'Due date cannot be in the past.',
-}),
+  dueDateTime: Joi.alternatives().try(
+    Joi.string().valid("none").empty(""), // allow "none" or empty
+    Joi.date().iso().min("now").messages({
+      "date.base": "Due date must be a valid date.",
+      "date.format": "Due date must be in ISO format.",
+      "date.min": "Due date cannot be in the past.",
+    })
+  ),
   checkLists: Joi.string().custom((value, helpers) => {
     try {
       const parsed = JSON.parse(value);
