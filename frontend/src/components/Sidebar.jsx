@@ -49,10 +49,10 @@ const Sidebar = () => {
     //   path: "/overview",
     //   icon: <LayoutDashboard size={20} />,
     // },
-    { name: "Team", path: "/team", icon: <Users size={20} /> },
+    // { name: "Team", path: "/team", icon: <Users size={20} /> },
     { name: "Board", path: "/projects", icon: <FolderKanban size={20} /> },
     // { name: "Tasks", path: "/tasks", icon: <ListChecks size={20} /> },
-    { name: "Invitation", path: "/invitation", icon: <Bell size={20} /> },
+    // { name: "Invitation", path: "/invitation", icon: <Bell size={20} /> },
   ];
 
   return (

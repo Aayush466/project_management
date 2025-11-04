@@ -20,12 +20,12 @@ function AppRouter() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Projects />
           </ProtectedRoute>
         }
       />
 
-      <Route
+      {/* <Route
         path="/team"
         element={
           <ProtectedRoute>
@@ -59,7 +59,7 @@ function AppRouter() {
             <Invitation />
           </ProtectedRoute>
         }
-      />
+      /> */}
 
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>

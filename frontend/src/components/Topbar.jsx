@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Bell, Upload } from "lucide-react";
+import { useSelector } from "react-redux";
 
-const Topbar = ({userName}) => {
+const Topbar = ({ userName }) => {
+  const userProfile = useSelector((state) => state.profile.user);
+
   const [user, setUser] = useState({
     username: "Loading...",
     avatar: null,
@@ -12,12 +15,15 @@ const Topbar = ({userName}) => {
 
   // ✅ Fetch user profile
   useEffect(() => {
+    console.log(userProfile);
+
     const fetchUserProfile = async () => {
       try {
         setUser({
-          username: userName,
+          username: userProfile.name,
           avatar: null,
         });
+        console.log(user);
       } catch (error) {
         console.error("Error fetching user data:", error);
         setUser({ username: "User", avatar: null });

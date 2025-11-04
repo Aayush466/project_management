@@ -213,25 +213,55 @@ const TaskDetailModal = ({
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [attachments, setAttachments] = useState(
-    task.attachments && task.attachments.length > 0 ? task.attachments : [] 
+    task.attachments && task.attachments.length > 0 ? task.attachments : []
   );
-  const [isSaved , setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
-  const [isEditingDescription , setIsEditingDescription ] = useState(false);
-  const [isEditingDate , setIsEditingDate] = useState(false);
-
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [isEditingDate, setIsEditingDate] = useState(false);
 
   const handleFileChange = (e) => setSelectedFile(e.target.files[0]);
 
-  const handleSave = async () =>{
+  const handleSave = async () => {
     try {
-        const formData = new FormData();
-        
-    } catch (error) {
-        
-    }
-  }
- };
+      const formData = new FormData();
+      formData.append("description", description);
+      formData.append("dueDateTime", selectedDate);
+      if (selectedFile) {
+        formData.append("files", selectedFile);
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/cards/${boardId}/${listId}/${task._id}`,
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      setAttachments(() => response.data.data.attachments);
+
+      const updateTask = response.data?.data || {
+        ...task,
+        description,
+        dueDateTime: selectedDate,
+        attachment: selectedFile ? selectedFile.name : task.attachment,
+        listId,
+      };
+
+      onUpdateTask(updateTask);
+      setSelectedFile(null);
+      task.files = updateTask.files;
+
+      setIsSaved(true)
+
+      setTimeout(()=> setIsSaved(false), 4000);
+
+      setIsEditingDescription(false)
+    } catch (error) {}
+  };
+};
 
 // --- BoardView Component ---
 const BoardView = ({ boardData, onBackToDashboard }) => {
