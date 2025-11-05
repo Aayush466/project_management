@@ -12,8 +12,8 @@ import {
 } from "react-icons/fi";
 import { BiDetail } from "react-icons/bi";
 import { MdOutlineDescription } from "react-icons/md";
-import { useSelector , useDispatch} from "react-redux";
-import { setProfile } from "../features/profile/profileSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 // --- TaskCard Component ---
 const TaskCard = ({ card, listId, onOpenTask, onDeleteCard }) => (
@@ -273,7 +273,7 @@ const TaskDetailModal = ({
   const handleSave = async () => {
     try {
       const formData = new FormData();
-      formData.append("description", description);
+      if (description !== "") formData.append("description", description);
       // Send the combined ISO date/time string
       formData.append("dueDateTime", selectedDate);
       if (selectedFile) {
@@ -346,6 +346,18 @@ const TaskDetailModal = ({
       console.error("Error deleting attachment:", error);
       alert("Failed to delete attachment.");
     }
+  };
+
+  const formatDescription = (text) => {
+    if (!text) return "";
+    const urlRegex = /(https?:\/\/[^\s]+)/g; // Matches http/https links
+
+    // Replace URLs with <a> tags
+    return text.replace(
+      urlRegex,
+      (url) =>
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`
+    );
   };
 
   return (
@@ -423,9 +435,12 @@ const TaskDetailModal = ({
                 onClick={() => setIsEditingDescription(true)}
               >
                 {description.trim() ? (
-                  <div className="whitespace-pre-wrap leading-relaxed">
-                    {description}
-                  </div>
+                  <div
+                    className="whitespace-pre-wrap leading-relaxed"
+                    dangerouslySetInnerHTML={{
+                      __html: formatDescription(description),
+                    }}
+                  />
                 ) : (
                   <span className="text-gray-400 italic">
                     Click to add a detailed description...
@@ -768,10 +783,8 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 👈 NEW STATE
 
   const boards = useSelector((state) => state.profile.user.myBoards);
-  
-  const dispatch = useDispatch()
 
-  
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col h-screen overflow-hidden relative">
@@ -821,13 +834,13 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
       <div
         className={`p-4 ${boardBg} text-white flex justify-between items-center flex-shrink-0`}
       >
+        {/* Left Section */}
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)} // 👈 toggle sidebar
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group"
             title="Toggle Sidebar"
           >
-            {/* Three-line Hamburger Icon */}
             <div className="space-y-1.5">
               <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
               <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
@@ -836,8 +849,17 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
           </button>
           <h1 className="text-xl font-bold truncate">{boardTitle}</h1>
         </div>
+
+        {/* Right Section */}
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-100 transition-all cursor-pointer"
+        >
+          Back
+        </button>
       </div>
 
+      {/* className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-md text-sm transition" */}
       {/* Kanban Board */}
       <div
         className="flex-1 overflow-x-auto p-4 flex space-x-4 items-start"

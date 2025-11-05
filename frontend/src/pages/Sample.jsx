@@ -12,6 +12,8 @@ import {
 } from "react-icons/fi";
 import { BiDetail } from "react-icons/bi";
 import { MdOutlineDescription } from "react-icons/md";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 // --- TaskCard Component ---
 const TaskCard = ({ card, listId, onOpenTask, onDeleteCard }) => (
@@ -206,8 +208,10 @@ const TaskDetailModal = ({
   onUpdateTask,
 }) => {
   const [description, setDescription] = useState(task.description || "");
-  const [selectedDate, setSelectedDate] = useState(task.dueDate || ""); // Full ISO string
-  const [selectedTime, setSelectedTime] = useState(getTimePart(task.dueDate)); // Time part only (HH:MM)
+  const [selectedDate, setSelectedDate] = useState(task.dueDateTime || ""); // Full ISO string
+  const [selectedTime, setSelectedTime] = useState(
+    getTimePart(task.dueDateTime)
+  ); // Time part only (HH:MM)
   const [selectedFile, setSelectedFile] = useState(null);
   const [attachments, setAttachments] = useState(
     task.attachments && task.attachments.length > 0 ? task.attachments : []
@@ -269,7 +273,7 @@ const TaskDetailModal = ({
   const handleSave = async () => {
     try {
       const formData = new FormData();
-      formData.append("description", description);
+      if (description !== "") formData.append("description", description);
       // Send the combined ISO date/time string
       formData.append("dueDateTime", selectedDate);
       if (selectedFile) {
@@ -290,7 +294,7 @@ const TaskDetailModal = ({
       const updatedTask = response.data?.data || {
         ...task,
         description,
-        dueDate: selectedDate, // Saved date/time
+        dueDateTime: selectedDate, // Saved date/time
         attachment: selectedFile ? selectedFile.name : task.attachment,
         listId,
       };
@@ -344,110 +348,99 @@ const TaskDetailModal = ({
     }
   };
 
+  const formatDescription = (text) => {
+    if (!text) return "";
+    const urlRegex = /(https?:\/\/[^\s]+)/g; // Matches http/https links
+
+    // Replace URLs with <a> tags
+    return text.replace(
+      urlRegex,
+      (url) =>
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`
+    );
+  };
+
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white p-8 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-100 transition-all"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button */}
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-800 text-2xl"
+            className="text-gray-400 hover:text-gray-700 text-4xl transition"
           >
-            &#x2715;
+            &times;
           </button>
         </div>
 
         {/* Header */}
-        <div className="flex items-start space-x-3 mb-4">
-          <BiDetail className="text-3xl text-gray-600 mt-1" />
+        <div className="flex items-start space-x-3 mb-6 border-b border-gray-100 pb-4">
+          <BiDetail className="text-4xl text-blue-600 mt-1" />
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-800 break-words">
               {task.title}
             </h2>
-            <p className="text-sm text-gray-500">
-              in list <span className="underline">{listName}</span>
+            <p className="text-sm text-gray-500 mt-1">
+              in list{" "}
+              <span className="text-blue-600 font-medium">{listName}</span>
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mb-6 flex flex-wrap gap-2 ml-9">
+        <div className="flex flex-wrap gap-3 mb-6 ml-9">
           <ActionButton
             icon={FiPaperclip}
-            label="Attachment"
+            label="Add Attachment"
             onClick={() => document.getElementById("fileInput").click()}
-          />
-          <ActionButton
-            icon={FiClock}
-            label="Dates"
-            // Toggle Date Edit Mode
-            onClick={() => setIsEditingDate(true)}
+            className="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200"
           />
         </div>
 
-        {/* --- DESCRIPTION SECTION (Edit/View Mode) --- */}
-        <div className="flex items-start space-x-3 mb-6">
-          <MdOutlineDescription className="text-2xl text-gray-600 mt-1" />
+        {/* Description Section */}
+        <section className="flex items-start space-x-3 mb-8">
+          <MdOutlineDescription className="text-2xl text-blue-500 mt-1" />
           <div className="flex-1">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-semibold text-gray-800">
                 Description
               </h3>
 
-              {/* Edit Button */}
               {!isEditingDescription && (
                 <button
                   onClick={() => setIsEditingDescription(true)}
-                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm transition"
+                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium transition"
                 >
                   Edit
                 </button>
               )}
             </div>
 
-            {/* Conditional Rendering for Edit/View */}
             {isEditingDescription ? (
-              // --- EDIT MODE: Rich Text Mockup/Textarea ---
-              <div className="w-full border border-blue-400 rounded-md shadow-sm">
-                {/* RICH TEXT EDITOR TOOLBAR MOCKUP */}
-                {/* <div className="flex items-center p-1.5 bg-gray-50 border-b border-gray-200 rounded-t-md">
-                  <button className="px-3 py-1 bg-gray-200 rounded-md text-sm text-gray-800 flex items-center hover:bg-gray-300">
-                    Aa
-                    <FiChevronDown className="ml-1 w-3 h-3" />
-                  </button>
-                  <span className="text-gray-300 mx-2">|</span>
-                  <button className="px-2 py-1 font-bold text-gray-800 hover:bg-gray-200 rounded-md">
-                    B
-                  </button>
-                  <button className="px-2 py-1 italic text-gray-800 hover:bg-gray-200 rounded-md">
-                    I
-                  </button>
-                  <span className="text-gray-300 mx-2">|</span>
-                  
-                </div> */}
-
-                {/* Text Area Content */}
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add a detailed description..."
-                  className="w-full p-2 text-sm text-gray-900 outline-none resize-none min-h-[100px] rounded-b-md"
-                  // Note: Removed the border class from textarea itself as the container now handles it
-                />
-              </div>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Add a more detailed description..."
+                className="w-full rounded-md p-3 text-sm border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-100 outline-none resize-none min-h-[100px] bg-gray-50"
+              />
             ) : (
-              // --- VIEW MODE: Read-only display ---
               <div
-                className="w-full p-2 text-sm text-gray-700 bg-gray-50 rounded-md border border-transparent cursor-pointer hover:border-gray-300 min-h-[50px]"
+                className="w-full p-3 text-sm text-gray-700 bg-gray-50 rounded-md border border-transparent cursor-pointer hover:border-gray-300 min-h-[60px] transition"
                 onClick={() => setIsEditingDescription(true)}
               >
                 {description.trim() ? (
-                  <div className="whitespace-pre-wrap">{description}</div>
+                  <div
+                    className="whitespace-pre-wrap leading-relaxed"
+                    dangerouslySetInnerHTML={{
+                      __html: formatDescription(description),
+                    }}
+                  />
                 ) : (
                   <span className="text-gray-400 italic">
                     Click to add a detailed description...
@@ -456,103 +449,97 @@ const TaskDetailModal = ({
               </div>
             )}
           </div>
-        </div>
-        {/* ------------------------------------------- */}
+        </section>
 
-        {/* --- DUE DATE SECTION (Edit/View Mode) --- */}
-        <div className="mb-6">
-          <label className="block text-lg font-semibold text-gray-800 mb-2">
+        {/* Due Date Section */}
+        <section className="mb-8">
+          <label className="block text-lg font-semibold text-gray-800 mb-3">
             Due Date
           </label>
 
-          {/* VIEW MODE */}
           {!isEditingDate && selectedDate ? (
             <div
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer transition"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md text-sm font-medium cursor-pointer transition"
               onClick={() => setIsEditingDate(true)}
             >
-              <span className="text-blue-600">
-                {formatDateTime(selectedDate)}
-              </span>
-              <FiChevronDown className="w-4 h-4 text-gray-500" />
+              <span>{formatDateTime(selectedDate)}</span>
+              <FiChevronDown className="w-4 h-4" />
             </div>
           ) : (
-            // EDIT MODE (visible if editing or if selectedDate is empty)
-            <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
-              <div className="flex items-center space-x-3 mb-2">
-                {/* Date Input */}
+            <div className="bg-gray-50 p-4 rounded-md border border-gray-200 shadow-sm">
+              <div className="flex items-center space-x-3 mb-3">
                 <input
                   id="dateInput"
                   type="date"
                   value={getDatePart(selectedDate)}
                   onChange={handleDatePartChange}
-                  className="rounded-md p-2 text-sm border border-gray-300 focus:border-blue-500 focus:ring-blue-500 outline-none"
+                  className="rounded-md p-2 text-sm border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-100 outline-none"
                 />
-                {/* Time Input */}
                 <input
                   type="time"
                   value={selectedTime}
                   onChange={handleTimePartChange}
-                  className="rounded-md p-2 text-sm border border-gray-300 focus:border-blue-500 focus:ring-blue-500 outline-none"
+                  className="rounded-md p-2 text-sm border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-100 outline-none"
                 />
               </div>
 
-              <div className="flex justify-start space-x-2 mt-3">
-                {/* Remove Due Date Button */}
+              <div className="flex space-x-3">
                 {selectedDate && (
                   <button
                     onClick={() => {
                       setSelectedDate("");
                       setIsEditingDate(false);
                     }}
-                    className="px-3 py-1 bg-white border border-red-300 hover:bg-red-50 text-red-600 rounded-md text-sm flex items-center space-x-1"
+                    className="px-3 py-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 rounded-md text-sm flex items-center space-x-1 transition"
                   >
                     <FiTrash2 className="text-red-500" />
-                    <span>Remove Due Date</span>
+                    <span>Remove</span>
                   </button>
                 )}
-                {/* Done Button */}
                 <button
                   onClick={() => setIsEditingDate(false)}
-                  className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-sm"
+                  className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-sm transition"
                 >
                   Done
                 </button>
               </div>
             </div>
           )}
-        </div>
-        {/* ------------------------------------------- */}
+        </section>
 
-        {/* File Attachment */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-2">
-            Attachment
+        {/* Attachments Section */}
+        <section className="mb-8">
+          <label className="block text-lg font-semibold text-gray-800 mb-3">
+            Attachments
           </label>
 
           {selectedFile ? (
-            <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
-              <p className="text-sm text-gray-700">{selectedFile.name}</p>
+            <div className="bg-gray-50 p-4 rounded-md border border-gray-200 shadow-sm">
+              <p className="text-sm text-gray-700 font-medium">
+                {selectedFile.name}
+              </p>
 
               {selectedFile.type.startsWith("image/") && (
                 <img
                   src={URL.createObjectURL(selectedFile)}
                   alt="Preview"
-                  className="mt-2 max-h-40 rounded-md border"
+                  className="mt-3 max-h-48 rounded-lg border"
                 />
               )}
 
               <button
                 onClick={() => setSelectedFile(null)}
-                className="mt-2 px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-sm flex items-center space-x-1"
+                className="mt-3 px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-md text-sm flex items-center space-x-1 transition"
               >
                 <FiTrash2 className="text-red-500" />
                 <span>Remove</span>
               </button>
             </div>
           ) : attachments && attachments.length > 0 ? (
-            <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
-              <p className="text-sm text-gray-700 mb-2">Existing Attachment:</p>
+            <div className="bg-gray-50 p-4 rounded-md border border-gray-200 shadow-sm">
+              <p className="text-sm text-gray-600 mb-3 font-medium">
+                Existing Attachment:
+              </p>
 
               {attachments.map((attachment, index) => (
                 <div
@@ -563,14 +550,14 @@ const TaskDetailModal = ({
                     href={attachment.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 underline"
+                    className="text-blue-600 hover:text-blue-800 underline font-medium"
                   >
                     {attachment.fileName}
                   </a>
 
                   <button
                     onClick={() => handleDeleteAttachment(attachment.fileId)}
-                    className="text-red-500 hover:text-red-700 flex items-center space-x-1 cursor-pointer"
+                    className="text-red-500 hover:text-red-700 flex items-center space-x-1 cursor-pointer transition"
                   >
                     <FiTrash2 size={14} />
                     <span>Delete</span>
@@ -581,7 +568,7 @@ const TaskDetailModal = ({
           ) : (
             <button
               onClick={() => document.getElementById("fileInput").click()}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-md text-sm text-gray-700 transition"
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-sm font-medium border border-blue-200 transition"
             >
               <FiPaperclip className="text-lg" />
               <span>Attach a file</span>
@@ -594,34 +581,31 @@ const TaskDetailModal = ({
             onChange={handleFileChange}
             style={{ display: "none" }}
           />
-        </div>
+        </section>
 
-        {/* Save / Cancel with Improvements */}
-        <div className="flex items-center mt-4 space-x-3">
-          {/* Save Button - Primary Action */}
+        {/* Save / Cancel Buttons */}
+        <div className="flex items-center mt-6 space-x-4 border-t border-gray-100 pt-4">
           <button
             onClick={handleSave}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm shadow-md hover:shadow-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm shadow-md transition"
           >
             Save Changes
           </button>
 
-          {/* Cancel Button - Secondary Action/Outline Style */}
           <button
             onClick={handleCancel}
-            className="px-5 py-2 text-gray-700 font-semibold bg-white border border-gray-300 hover:bg-gray-100 rounded-lg text-sm transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
+            className="px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold rounded-lg text-sm transition"
           >
             Cancel
           </button>
 
           {isSaved && (
-            <span className="text-green-500 text-sm font-medium ml-4 animate-pulse">
+            <span className="text-green-600 text-sm font-medium ml-4 flex items-center animate-fadeIn">
               <svg
-                className="inline-block w-4 h-4 mr-1"
+                className="inline-block w-5 h-5 mr-1 text-green-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -758,6 +742,7 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
 
         if (response.data?.data) {
           const list = lists.find((l) => l._id === listId);
+          console.log(response.data.data);
           if (list) {
             setSelectedTaskDetails({
               task: response.data.data,
@@ -795,23 +780,86 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
   const boardTitle = boardData.title;
   const boardBg = "bg-blue-600";
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 👈 NEW STATE
+
+  const boards = useSelector((state) => state.profile.user.myBoards);
+
+  const navigate = useNavigate();
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden relative">
+      {/* Sidebar */}
+      <div
+        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-40 transform transition-transform duration-300 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-4 border-b flex justify-between items-center">
+          <h2 className="text-lg font-semibold">My Board List </h2>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="text-gray-500 hover:text-gray-700 text-xl"
+          >
+            &times;
+          </button>
+        </div>
+        <div className="p-4">
+          <ul className="space-y-3 text-gray-700">
+            {boards && boards.length > 0 ? (
+              boards.map((board) => (
+                <li
+                  key={board._id}
+                  className="hover:text-blue-600 cursor-pointer flex items-center justify-between"
+                  onClick={() => handleOpenBoard(board._id)} // 👉 You can define this to navigate/open board
+                >
+                  <span>{board.title}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-500 italic">No boards found</li>
+            )}
+          </ul>
+        </div>
+      </div>
+
+      {/* Overlay (when sidebar is open) */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-30"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Header */}
       <div
         className={`p-4 ${boardBg} text-white flex justify-between items-center flex-shrink-0`}
       >
+        {/* Left Section */}
         <div className="flex items-center space-x-4">
           <button
-            onClick={onBackToDashboard}
-            className="px-2 py-1 hover:bg-white hover:bg-opacity-20 rounded transition"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group"
+            title="Toggle Sidebar"
           >
-            <FiAlignLeft className="inline-block mr-1" /> Boards
+            <div className="space-y-1.5">
+              <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
+              <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
+              <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
+            </div>
           </button>
           <h1 className="text-xl font-bold truncate">{boardTitle}</h1>
         </div>
+
+        {/* Right Section */}
+        <button
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-100 transition-all cursor-pointer"
+        >
+          Back
+        </button>
       </div>
 
+      {/* className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-md text-sm transition" */}
       {/* Kanban Board */}
       <div
         className="flex-1 overflow-x-auto p-4 flex space-x-4 items-start"
