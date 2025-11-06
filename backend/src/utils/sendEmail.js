@@ -45,7 +45,7 @@ export const sendMail = (mail, otp, registrationOtpExpiry) => {
   });
 };
 
-export const sendResetOtpService = (mail, otp,resetOtpExpiry) => {
+export const sendResetOtpService = (mail, otp, resetOtpExpiry) => {
   const mailOptions = {
     from: environmentVariables.email,
     to: mail,
@@ -82,7 +82,7 @@ export const sendResetOtpService = (mail, otp,resetOtpExpiry) => {
 };
 
 
-export const sendInviteEmail = (mail,name,adminMail) => {
+export const sendInviteEmail = (mail, name, adminMail) => {
   const mailOptions = {
     from: environmentVariables.email,
     to: mail,
@@ -99,7 +99,7 @@ export const sendInviteEmail = (mail,name,adminMail) => {
   });
 };
 
-export const sendAcceptEmail = (adminmail,adminname,username) => {
+export const sendAcceptEmail = (adminmail, adminname, username) => {
   const mailOptions = {
     from: environmentVariables.email,
     to: adminmail,
@@ -116,7 +116,7 @@ export const sendAcceptEmail = (adminmail,adminname,username) => {
   });
 };
 
-export const sendRejectEmail = (adminmail,adminname,username) => {
+export const sendRejectEmail = (adminmail, adminname, username) => {
   const mailOptions = {
     from: environmentVariables.email,
     to: adminmail,

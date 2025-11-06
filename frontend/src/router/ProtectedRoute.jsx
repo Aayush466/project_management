@@ -1,26 +1,24 @@
 import { useState, useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { setProfile } from "../features/profile/profileSlice";
 
 const ProtectedRoute = ({ children }) => {
-  const [authState, setAuthState] = useState("loading");
+  const [authState, setAuthState] = useState("loading"); // "loading" | "authenticated" | "unauthenticated"
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/users/profile", {
-          credentials: "include", // include cookies if needed
+        const res = await axios.get("http://localhost:5000/api/users/profile", {
+          withCredentials: true, // ✅ includes cookies (like tokens)
         });
 
-        const data = await res.json();
-
-        if (data?.success && data?.data?._id) {
-          // ✅ User is authenticated
-          dispatch(setProfile(data.data));
+        if (res.data?.success && res.data?.data?._id) {
+          // ✅ User authenticated
+          dispatch(setProfile(res.data.data));
           setAuthState("authenticated");
         } else {
           // ❌ Not authenticated
@@ -35,9 +33,9 @@ const ProtectedRoute = ({ children }) => {
     };
 
     checkAuth();
-  }, []);
+  }, [dispatch, navigate]);
 
-  // Show loading state while checking auth
+  // While checking authentication
   if (authState === "loading") {
     return (
       <div className="text-center mt-8 text-gray-600">
@@ -46,7 +44,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // If authenticated → render children, else redirect to login
+  // If authenticated, render children; else navigate handled already
   return children;
 };
 

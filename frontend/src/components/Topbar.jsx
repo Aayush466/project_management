@@ -77,12 +77,12 @@ const Topbar = ({ userName }) => {
 
       <div className="flex items-center space-x-4">
         {/* 🔔 Notification Bell */}
-        <button className="relative">
+        {/* <button className="relative">
           <Bell size={22} className="text-gray-600" />
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
             3
           </span>
-        </button>
+        </button> */}
 
         {/* 👤 Clickable Avatar */}
         <div

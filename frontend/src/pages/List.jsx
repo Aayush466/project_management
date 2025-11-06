@@ -84,7 +84,7 @@ const KanbanList = ({
         </h2>
         <div className="relative">
           <button
-            className="text-gray-500 hover:text-gray-700 p-1"
+            className="text-gray-500 hover:text-gray-700 p-1 cursor-pointer"
             onClick={() =>
               setOpenMenuListId(openMenuListId === list._id ? null : list._id)
             }
@@ -95,7 +95,7 @@ const KanbanList = ({
             <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg border z-10">
               <button
                 onClick={() => onDeleteList(list._id)}
-                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 rounded-md"
+                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 rounded-md cursor-pointer"
               >
                 Delete List
               </button>
@@ -135,7 +135,7 @@ const KanbanList = ({
             <div className="flex items-center mt-2">
               <button
                 onClick={handleAddTaskSubmit}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm mr-2"
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm mr-2 cursor-pointer"
               >
                 Add card
               </button>
@@ -154,7 +154,7 @@ const KanbanList = ({
       {!isAddingTask && (
         <button
           onClick={() => setIsAddingTask(true)}
-          className="flex items-center text-sm text-gray-500 hover:text-gray-800 py-2 mt-2 transition"
+          className="flex items-center text-sm text-gray-500 hover:text-gray-800 py-2 mt-2 transition cursor-pointer"
         >
           <FiPlus className="mr-1" /> Add a card
         </button>
@@ -399,7 +399,7 @@ const TaskDetailModal = ({
             icon={FiPaperclip}
             label="Add Attachment"
             onClick={() => document.getElementById("fileInput").click()}
-            className="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200"
+            className="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 cursor-pointer"
           />
         </div>
 
@@ -415,7 +415,7 @@ const TaskDetailModal = ({
               {!isEditingDescription && (
                 <button
                   onClick={() => setIsEditingDescription(true)}
-                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium transition"
+                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium transition cursor-pointer"
                 >
                   Edit
                 </button>
@@ -881,7 +881,7 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
           {!openAddList ? (
             <button
               onClick={() => setOpenAddList(true)}
-              className="w-full bg-black bg-opacity-10 hover:bg-opacity-20 rounded-lg p-3 h-12 flex items-center text-white text-sm transition"
+              className="w-full bg-black bg-opacity-10 hover:bg-opacity-20 rounded-lg p-3 h-12 flex items-center text-white text-sm transition cursor-pointer"
             >
               <FiPlus className="mr-1" /> Add another list
             </button>
