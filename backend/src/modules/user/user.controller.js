@@ -1,7 +1,13 @@
 import * as userService from "./user.service.js";
 import User from "./user.model.js";
 import environmentVariables from "../../config/env.js";
-import { sendMail, sendInviteEmail, sendAcceptEmail, sendRejectEmail } from "../../utils/sendEmail.js";
+import {
+  sendMail,
+  sendInviteEmail,
+  sendAcceptEmail,
+  sendRejectEmail,
+  approvedUserEmail,
+} from "../../utils/sendEmail.js";
 
 const generateOtpCode = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
@@ -18,7 +24,17 @@ export const getUsers = async (req, res, next) => {
 export const getUser = async (req, res, next) => {
   try {
     const user = await userService.getUser(req.user._id);
-    res.json({ success: true, data: user });
+    const allUsers = await User.find({ email: { $ne: environmentVariables.adminEmail },access:false,verified:true }).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode')
+
+    const trashCards = user.trashCards.map(card=>({cardId:card._id,title:card.title,listId:card.list._id,boardId:card.list.board._id}))
+    const trashLists = user.trashLists.map(list=>({listId:list._id,title:list.title,boardId:list.board}))
+    const trashBoards = user.trashBoards.map(board=>({title:board.title,boardId:board._id}))
+
+    if(req.user.email==environmentVariables.adminEmail)
+      return res.json({ success: true, data:user,pendingUsers:allUsers,admin:true,trashCards,trashBoards,trashLists });
+
+    res.json({ success: true, data:user,admin:false,trashCards,trashBoards,trashLists });
+    
   } catch (err) {
     next(err);
   }
@@ -34,18 +50,14 @@ export const createUser = async (req, res, next) => {
         return res.status(400).json({ message: "Already Exists" });
       else await userService.deleteUser({ email: req.body.email });
     }
-
     const reqBody = {
       ...req.body,
       hashedCode: otp,
       expiresOtpAt: new Date(
         Date.now() + environmentVariables.registrationOtpExpiry * 60 * 1000
       ),
+      access:environmentVariables.adminEmail==req.body.email?true:false
     };
-
-    if (req.body.email != "shahayush688@gmail.com") {
-      return res.status(400).json({ message: "email does not seems to be an admin email" });
-    }
 
     sendMail(req.body.email, otp, environmentVariables.registrationOtpExpiry);
 
@@ -60,30 +72,49 @@ export const createUser = async (req, res, next) => {
 
 export const sendInvite = async (req, res, next) => {
   try {
-    const user = await User.findOne({ email: req.body.email, verified: true }).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
+    const user = await User.findOne({
+      email: req.body.email,
+      verified: true,
+    }).select(
+      "-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode"
+    );
 
     if (!user) {
-      return res.status(400).json({ message: "User not Exists, can't send Invite" });
+      return res
+        .status(400)
+        .json({ message: "User not Exists, can't send Invite" });
     }
 
     if (user._id.equals(req.user._id)) {
-      return res.status(400).json({ message: "Cannot send invite to yourself" });
+      return res
+        .status(400)
+        .json({ message: "Cannot send invite to yourself" });
     }
 
-    if (req.user.invitedUsers.some(u => u.user.equals(user._id))) {
-      return res.status(400).json({ message: "Invite already sent to this user" });
+    if (req.user.invitedUsers.some((u) => u.user.equals(user._id))) {
+      return res
+        .status(400)
+        .json({ message: "Invite already sent to this user" });
     }
 
-    if (req.user.rejectedUsers.some(u => u.user.equals(user._id))) {
-      return res.status(400).json({ message: "User already rejected invitation, can't sent again" });
+    if (req.user.rejectedUsers.some((u) => u.user.equals(user._id))) {
+      return res
+        .status(400)
+        .json({
+          message: "User already rejected invitation, can't sent again",
+        });
     }
 
-    if (req.user.myUsers.some(u => u.user.equals(user._id))) {
-      return res.status(400).json({ message: "user already accepted invitation, can't sent again" });
+    if (req.user.myUsers.some((u) => u.user.equals(user._id))) {
+      return res
+        .status(400)
+        .json({
+          message: "user already accepted invitation, can't sent again",
+        });
     }
 
     await User.findByIdAndUpdate(req.user._id, {
-      $addToSet: { invitedUsers: { user: user._id } }
+      $addToSet: { invitedUsers: { user: user._id } },
     });
 
     user.invitations.push({ admin: req.user._id });
@@ -101,17 +132,26 @@ export const sendInvite = async (req, res, next) => {
 
 export const acceptInvite = async (req, res, next) => {
   try {
-    const admin = await User.findOne({ email: req.body.email, verified: true }).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
+    const admin = await User.findOne({
+      email: req.body.email,
+      verified: true,
+    }).select(
+      "-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode"
+    );
 
     if (!admin) {
-      return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
+      return res
+        .status(400)
+        .json({ message: "Admin not Exists, can't accept Invite" });
     }
 
-    if (!req.user.invitations.some(u => u.admin.equals(admin._id))) {
+    if (!req.user.invitations.some((u) => u.admin.equals(admin._id))) {
       return res.status(400).json({ message: "Invitation not exists" });
     }
 
-    const user = await User.findOne(req.user._id).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
+    const user = await User.findOne(req.user._id).select(
+      "-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode"
+    );
 
     user.invitations.pull({ admin: admin._id });
     user.acceptedAdmins.push({ admin: admin._id });
@@ -125,7 +165,56 @@ export const acceptInvite = async (req, res, next) => {
 
     res
       .status(201)
-      .json({ success: true, message: `Invite accept successfully`, data: admin });
+      .json({
+        success: true,
+        message: `Invite accept successfully`,
+        data: admin,
+      });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const approveUser = async (req, res, next) => {
+  try {
+
+    if(req.user.email!=environmentVariables.adminEmail)
+    {
+      return res
+        .status(400)
+        .json({ message: "You are not admin, can't approve" });
+    }
+
+    const user = await User.findOne({
+      email: req.body.email,
+      verified: true,
+    }).select(
+      "-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode"
+    );
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "User not exists, can't approve" });
+    }
+
+    if(user.access)
+       return res
+        .status(400)
+        .json({ message: "User already approved, can't approve again" });
+
+    user.access=true;
+    await user.save();
+
+    approvedUserEmail(req.user.email, user.email);
+
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: `Approved successfully`,
+        data: user.email,
+      });
   } catch (err) {
     next(err);
   }
@@ -133,17 +222,26 @@ export const acceptInvite = async (req, res, next) => {
 
 export const rejectInvite = async (req, res, next) => {
   try {
-    const admin = await User.findOne({ email: req.body.email, verified: true }).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
+    const admin = await User.findOne({
+      email: req.body.email,
+      verified: true,
+    }).select(
+      "-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode"
+    );
 
     if (!admin) {
-      return res.status(400).json({ message: "Admin not Exists, can't accept Invite" });
+      return res
+        .status(400)
+        .json({ message: "Admin not Exists, can't accept Invite" });
     }
 
-    if (!req.user.invitations.some(u => u.admin.equals(admin._id))) {
+    if (!req.user.invitations.some((u) => u.admin.equals(admin._id))) {
       return res.status(400).json({ message: "Invitation not exists" });
     }
 
-    const user = await User.findOne(req.user._id).select('-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode');
+    const user = await User.findOne(req.user._id).select(
+      "-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode"
+    );
 
     user.invitations.pull({ admin: admin._id });
     user.rejectedAdmins.push({ admin: admin._id });
@@ -157,7 +255,11 @@ export const rejectInvite = async (req, res, next) => {
 
     res
       .status(201)
-      .json({ success: true, message: `Invite rejected successfully`, data: admin });
+      .json({
+        success: true,
+        message: `Invite rejected successfully`,
+        data: admin,
+      });
   } catch (err) {
     next(err);
   }

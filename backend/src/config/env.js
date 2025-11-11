@@ -13,6 +13,7 @@ const environmentVariables = {
   resetPasswordExpiry: process.env.RESET_PASSWORD_EXPIRY,
   service: process.env.SERVICE,
   email: process.env.EMAIL,
+  adminEmail: process.env.ADMIN_EMAIL,
   appPassword: process.env.APP_PASSWORD,
   cloudinaryFolderName:process.env.CLOUDINARY_FOLDER_NAME,
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,

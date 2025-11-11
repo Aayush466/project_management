@@ -1,5 +1,6 @@
 import * as listService from "./list.service.js";
 import Board from "../board/board.model.js";
+import User from "../user/user.model.js";
 import * as boardService from "../board/board.service.js";
 import cloudinary from "../../utils/claudinary.js";
 import Card from "../card/card.model.js";
@@ -106,6 +107,148 @@ export const deleteList = async (req, res, next) => {
         .json({ success: false, message: "List not found" });
     }
 
+    if(list.trash)
+      {
+      return res
+        .status(404)
+        .json({ success: false, message: "List is already in trash" });
+    }
+
+    list.trash = true;
+    list.save();
+
+    await User.updateOne(
+      { email: req.user.email },
+      { $addToSet: { trashLists: list._id } }
+    );
+
+
+    // let cardIds = [];
+    // let attachmentIds = [];
+
+    // for (const card of list.cards) {
+    //   attachmentIds = [
+    //     ...attachmentIds,
+    //     ...card.attachments.map((file) => file.fileId),
+    //   ];
+    //   cardIds = [...cardIds, card._id];
+    // }
+
+    // await Promise.all(
+    //   attachmentIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+    // );
+
+    // await Card.deleteMany({ _id: { $in: cardIds } });
+
+    // await List.deleteOne({ _id: req.params.listId });
+
+    // await Board.updateOne(
+    //   { _id: req.params.boardId },
+    //   { $pull: { lists: req.params.listId } }
+    // );
+
+    res.status(201).json({
+      success: true,
+      message: "List moved to trash",
+      data: list,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const restoreList = async (req, res, next) => {
+  try {
+    if (!req.user.myBoards.some((b) => b.equals(req.params.boardId))) {
+      return res.status(400).json({ message: "board does not exists" });
+    }
+
+    const list = await listService.getList({
+      _id: req.params.listId,
+      board: req.params.boardId,
+    });
+
+    if (!list) {
+      return res
+        .status(404)
+        .json({ success: false, message: "List not found" });
+    }
+
+    if(!list.trash)
+      {
+      return res
+        .status(404)
+        .json({ success: false, message: "List not exists in trash" });
+    }
+
+    list.trash = false;
+    list.save();
+
+    await User.updateOne(
+      { email: req.user.email },
+      { $pull: { trashLists: list._id } }
+    );
+
+
+    // let cardIds = [];
+    // let attachmentIds = [];
+
+    // for (const card of list.cards) {
+    //   attachmentIds = [
+    //     ...attachmentIds,
+    //     ...card.attachments.map((file) => file.fileId),
+    //   ];
+    //   cardIds = [...cardIds, card._id];
+    // }
+
+    // await Promise.all(
+    //   attachmentIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+    // );
+
+    // await Card.deleteMany({ _id: { $in: cardIds } });
+
+    // await List.deleteOne({ _id: req.params.listId });
+
+    // await Board.updateOne(
+    //   { _id: req.params.boardId },
+    //   { $pull: { lists: req.params.listId } }
+    // );
+
+    res.status(201).json({
+      success: true,
+      message: "List restored successfully",
+      data: list,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const permanentlyDeleteList = async (req, res, next) => {
+  try {
+    if (!req.user.myBoards.some((b) => b.equals(req.params.boardId))) {
+      return res.status(400).json({ message: "board does not exists" });
+    }
+
+    const list = await listService.getList({
+      _id: req.params.listId,
+      board: req.params.boardId,
+    });
+
+    if (!list) {
+      return res
+        .status(404)
+        .json({ success: false, message: "List not found" });
+    }
+
+    if(!list.trash)
+      {
+      return res
+        .status(404)
+        .json({ success: false, message: "List not exists in trash" });
+    }
+
+
     let cardIds = [];
     let attachmentIds = [];
 
@@ -130,9 +273,15 @@ export const deleteList = async (req, res, next) => {
       { $pull: { lists: req.params.listId } }
     );
 
+        
+    await User.updateOne(
+      { email: req.user.email },
+      { $pull: { trashLists: list._id } }
+    );
+
     res.status(201).json({
       success: true,
-      message: "List deleted successfully",
+      message: "List permanently deleted",
       data: list,
     });
   } catch (err) {

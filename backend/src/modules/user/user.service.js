@@ -56,6 +56,36 @@ export const getUser = async (id) => {
       model: "Card"
     }
     }
+  }).populate({
+    path: "trashBoards",
+    populate: {
+      path: "lists", // nested field inside Board
+      model: "List",
+      populate: {
+      path: "cards", // nested field inside Board
+      model: "Card"
+    }
+    }
+  }).populate({
+    path: "trashLists",
+    populate: {
+      path: "cards", // nested field inside Board
+      model: "Card",
+populate: {
+      path: "list", // nested field inside Board
+      model: "List"
+    }
+    }
+  }).populate({
+    path: "trashCards",
+    populate: {
+      path: "list", // nested field inside Board
+      model: "List",
+      populate: {
+      path: "board", // nested field inside Board
+      model: "Board"
+    }
+    }
   });
 };
 

@@ -11,17 +11,35 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     password: { type: String, required: true, minlength: 6 },
+    access: { type: Boolean, default: false },
     myUsers: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         acceptedAt: { type: Date, default: Date.now },
       },
     ],
-    myBoards: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Board" },
+    myBoards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Board" }],
+    trashCards: [
+      {type:mongoose.Schema.Types.ObjectId,ref:"Card"}
     ],
-    invitedUsers: [{user:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],
-    invitations: [{admin:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],
+    trashLists: [
+      {type:mongoose.Schema.Types.ObjectId,ref:"List"}
+    ],
+    trashBoards: [
+      {type:mongoose.Schema.Types.ObjectId,ref:"Board"}
+    ],
+    invitedUsers: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        invitedAt: { type: Date, default: Date.now },
+      },
+    ],
+    invitations: [
+      {
+        admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        invitedAt: { type: Date, default: Date.now },
+      },
+    ],
     rejectedUsers: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -30,14 +48,15 @@ const userSchema = new mongoose.Schema(
     ],
     rejectedAdmins: [
       {
-    admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    rejectedAt: { type: Date, default: Date.now },
-  },
-    ], acceptedAdmins: [
+        admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rejectedAt: { type: Date, default: Date.now },
+      },
+    ],
+    acceptedAdmins: [
       {
-    admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    rejectedAt: { type: Date, default: Date.now },
-  },
+        admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rejectedAt: { type: Date, default: Date.now },
+      },
     ],
     hashedCode: { type: String, default: "" },
     expiresOtpAt: { type: Date, required: true },

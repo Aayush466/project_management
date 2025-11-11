@@ -1,5 +1,5 @@
 import express from 'express';
-import { createCard,getCard,updateCard,deleteCardFile,deleteCard } from './card.controller.js';
+import { createCard,getCard,updateCard,deleteCardFile,deleteCard,restoreCard, permanentlyDeleteCard } from './card.controller.js';
 import { createCardSchema, createCardParamsSchema, getCardParamsSchema, updateCardSchema, getCardFileParamsSchema } from './card.validators.js';
 import { validateBody, validateBodyForm, validateParams } from '../../middleware/validate.middleware.js'; // your middleware path
 import authMiddleware from '../../middleware/auth.middleware.js';
@@ -25,8 +25,10 @@ const upload = multer({ storage });
 router.get('/:boardId/:listId/:cardId',authMiddleware,validateParams(getCardParamsSchema), getCard);
 router.post('/:boardId/:listId',authMiddleware,validateBody(createCardSchema),validateParams(createCardParamsSchema), createCard);
 router.put('/:boardId/:listId/:cardId',upload.array("files", 5),authMiddleware,validateParams(getCardParamsSchema),validateBodyForm(updateCardSchema), updateCard);
+router.delete('/delete/:boardId/:listId/:cardId',authMiddleware,validateParams(getCardParamsSchema), permanentlyDeleteCard);
 router.delete('/:boardId/:listId/:cardId/:fileId',authMiddleware,validateParams(getCardFileParamsSchema), deleteCardFile);
 router.delete('/:boardId/:listId/:cardId',authMiddleware,validateParams(getCardParamsSchema), deleteCard);
+router.put('/restore/:boardId/:listId/:cardId',authMiddleware,validateParams(getCardParamsSchema), restoreCard);
 // router.delete('/:id',authMiddleware,validateParams(getBoardSchema), deleteBoard);
 
 export default router;

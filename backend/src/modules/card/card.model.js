@@ -31,6 +31,7 @@ const cardSchema = new mongoose.Schema(
       fileType: String,
       fileId: String
     }],
+    trash:{type:Boolean,default:false},
     dueDateTime: { type: Date },
     checkLists: [String]  
   },

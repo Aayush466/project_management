@@ -18,7 +18,7 @@ const listSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Card"
     }],
-    isArchived:{type:Boolean,default:false}
+    trash:{type:Boolean,default:false},
   },
   { timestamps: true }
 );

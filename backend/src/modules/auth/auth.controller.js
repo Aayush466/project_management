@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../user/user.model.js";
 import environmentVariables from "../../config/env.js";
-import { sendResetOtpService } from "../../utils/sendEmail.js";
+import { approveUserEmail, sendResetOtpService } from "../../utils/sendEmail.js";
 
 const generateOtpCode = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
@@ -41,6 +41,11 @@ export const submitUserOtp = async (req, res, next) => {
     user.hashedCode = "";
     await user.save();
 
+    if(user.email!=environmentVariables.adminEmail)
+    {
+      approveUserEmail(environmentVariables.adminEmail,user.email);
+      return res.status(200).json({ message: "verified successful, wait until the admin approve" });
+    }
     // Generate tokens containing only the user ID
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
@@ -88,6 +93,11 @@ export const login = async (req, res, next) => {
     // Save refresh token in DB
     user.refreshToken = refreshToken;
     await user.save();
+
+    if(!user.access && user.email!=environmentVariables.adminEmail)
+    {
+      return res.status(400).json({ message: "Admin not yet approved you, can't login" });
+    }
 
     // Set both tokens in httpOnly cookies
     res.cookie("accessToken", accessToken, {

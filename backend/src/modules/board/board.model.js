@@ -5,7 +5,8 @@ const boardSchema = new mongoose.Schema(
   {
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     title: { type: String, required: true, trim: true, minlength: 3 },
-    lists: [ { type: mongoose.Schema.Types.ObjectId, ref: "List" }]
+    lists: [ { type: mongoose.Schema.Types.ObjectId, ref: "List" }],
+    trash:{type:Boolean,default:false},
   },
   { timestamps: true }
 );

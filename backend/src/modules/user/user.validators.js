@@ -14,6 +14,10 @@ export const acceptInviteSchema = Joi.object({
   email: Joi.string().email().required()
 });
 
+export const approveUserSchema = Joi.object({
+  email: Joi.string().email().required()
+});
+
 export const rejectInviteSchema = Joi.object({
   email: Joi.string().email().required()
 });

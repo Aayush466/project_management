@@ -1,5 +1,6 @@
 import * as cardService from "./card.service.js";
 import List from "../list/list.model.js";
+import User from "../user/user.model.js";
 import * as listService from "../list/list.service.js";
 import cloudinary from "../../utils/claudinary.js";
 import environmentVariables from "../../config/env.js";
@@ -234,6 +235,140 @@ export const deleteCard = async (req, res, next) => {
         .json({ success: false, message: "Card not found" });
     }
 
+    if(card.trash)
+      {
+      return res
+        .status(404)
+        .json({ success: false, message: "Card is already in trash" });
+    }
+
+    card.trash=true;
+    card.save();
+
+    await User.updateOne({email:req.user.email},{$addToSet:{trashCards:card._id}})    
+
+    
+
+    // await Promise.all(
+    //   card.attachments.map((file) => cloudinary.uploader.destroy(file.fileId))
+    // );
+
+    // await cardService.deleteCard({ _id: req.params.cardId });
+    
+//         await List.updateOne(
+//   { _id: req.params.listId },
+//   { $pull: { cards: req.params.cardId } }
+// )
+
+    res.status(201).json({
+      success: true,
+      message: "Card moved to in trash successfully",
+      data: card,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const restoreCard = async (req, res, next) => {
+  try {
+    if (!req.user.myBoards.some((b) => b.equals(req.params.boardId))) {
+      return res.status(400).json({ message: "board does not exists" });
+    }
+
+    const list = await listService.getList({
+      _id: req.params.listId,
+      board: req.params.boardId,
+    });
+
+    if (!list) {
+      return res
+        .status(404)
+        .json({ success: false, message: "List not found" });
+    }
+
+    const card = await cardService.getCard({
+      _id: req.params.cardId,
+      list: req.params.listId,
+    });
+
+    if (!card) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Card not found" });
+    }
+
+    if(!card.trash)
+      {
+      return res
+        .status(404)
+        .json({ success: false, message: "Card not exists in trash" });
+    }
+
+    card.trash=false;
+    card.save();
+
+    await User.updateOne({email:req.user.email},{$pull:{trashCards:card._id}})    
+
+    
+
+    // await Promise.all(
+    //   card.attachments.map((file) => cloudinary.uploader.destroy(file.fileId))
+    // );
+
+    // await cardService.deleteCard({ _id: req.params.cardId });
+    
+//         await List.updateOne(
+//   { _id: req.params.listId },
+//   { $pull: { cards: req.params.cardId } }
+// )
+
+    res.status(201).json({
+      success: true,
+      message: "Card restored successfully",
+      data: card,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const permanentlyDeleteCard = async (req, res, next) => {
+  try {
+    if (!req.user.myBoards.some((b) => b.equals(req.params.boardId))) {
+      return res.status(400).json({ message: "board does not exists" });
+    }
+
+    const list = await listService.getList({
+      _id: req.params.listId,
+      board: req.params.boardId,
+    });
+
+    if (!list) {
+      return res
+        .status(404)
+        .json({ success: false, message: "List not found" });
+    }
+
+    const card = await cardService.getCard({
+      _id: req.params.cardId,
+      list: req.params.listId,
+    });
+
+    if (!card) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Card not found" });
+    }
+
+    if(!card.trash)
+      {
+      return res
+        .status(404)
+        .json({ success: false, message: "Card is not in trash" });
+    }
+    
+
     await Promise.all(
       card.attachments.map((file) => cloudinary.uploader.destroy(file.fileId))
     );
@@ -245,9 +380,12 @@ export const deleteCard = async (req, res, next) => {
   { $pull: { cards: req.params.cardId } }
 )
 
+    await User.updateOne({email:req.user.email},{$pull:{trashCards:card._id}})    
+
+
     res.status(201).json({
       success: true,
-      message: "Card deleted successfully",
+      message: "Card deleted permanently",
       data: card,
     });
   } catch (err) {
