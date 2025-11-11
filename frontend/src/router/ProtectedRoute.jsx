@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
-import { setProfile } from "../features/profile/profileSlice";
+import { setProfile,setPendingUsers, setAdmin,setTrashBoards,setTrashCards,setTrashLists } from "../features/profile/profileSlice";
 
 const ProtectedRoute = ({ children }) => {
   const [authState, setAuthState] = useState("loading"); // "loading" | "authenticated" | "unauthenticated"
@@ -19,6 +19,15 @@ const ProtectedRoute = ({ children }) => {
         if (res.data?.success && res.data?.data?._id) {
           // ✅ User authenticated
           dispatch(setProfile(res.data.data));
+          dispatch(setAdmin(res.data.admin));
+          dispatch(setPendingUsers(res.data.pendingUsers?res.data.pendingUsers:[]))
+          dispatch(setPendingUsers(res.data.pendingUsers?res.data.pendingUsers:[]))
+          dispatch(setTrashCards(res.data.trashCards?res.data.trashCards:[]))
+          dispatch(setTrashLists(res.data.trashLists?res.data.trashLists:[]))
+          dispatch(setTrashBoards(res.data.trashBoards?res.data.trashBoards:[]))
+          
+          console.log(res.data.pendingUsers)
+          
           setAuthState("authenticated");
         } else {
           // ❌ Not authenticated

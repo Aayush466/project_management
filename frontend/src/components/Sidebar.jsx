@@ -9,8 +9,11 @@ import {
   Bell,
   Settings,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 const Sidebar = () => {
+  const isAdmin = useSelector((state) => state.profile.admin);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -43,17 +46,28 @@ const Sidebar = () => {
     }
   };
 
-  const links = [
-    // {
-    //   name: "Overview",
-    //   path: "/overview",
-    //   icon: <LayoutDashboard size={20} />,
-    // },
-    // { name: "Team", path: "/team", icon: <Users size={20} /> },
-    { name: "Board", path: "/projects", icon: <FolderKanban size={20} /> },
-    // { name: "Tasks", path: "/tasks", icon: <ListChecks size={20} /> },
-    // { name: "Invitation", path: "/invitation", icon: <Bell size={20} /> },
-  ];
+  const links = isAdmin
+    ? [
+        // {
+        //   name: "Overview",
+        //   path: "/overview",
+        //   icon: <LayoutDashboard size={20} />,
+        // },
+        // { name: "Team", path: "/team", icon: <Users size={20} /> },
+        { name: "Board", path: "/dashboard", icon: <FolderKanban size={20} /> },
+        {
+          name: "Approve User",
+          path: "/approve",
+          icon: <FolderKanban size={20} />,
+        },
+        { name: "Trash", path: "/trash", icon: <FolderKanban size={20} /> },
+        // { name: "Tasks", path: "/tasks", icon: <ListChecks size={20} /> },
+        // { name: "Invitation", path: "/invitation", icon: <Bell size={20} /> },
+      ]
+    : [
+        { name: "Board", path: "/dashboard", icon: <FolderKanban size={20} /> },
+        { name: "Trash", path: "/trash", icon: <FolderKanban size={20} /> },
+      ];
 
   return (
     <div className="h-screen bg-[#7B3931] text-white w-64 p-5 flex flex-col justify-between">

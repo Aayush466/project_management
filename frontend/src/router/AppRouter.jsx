@@ -4,12 +4,14 @@ import Login from "../pages/auth/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import { Navigate } from "react-router-dom";
 import Dashboard from "../pages/Dashboard";
+import Approve from "../pages/Approve";
 import TeamPage from "../pages/TeamPage";
 import Projects from "../pages/Projects";
 import Notifications from "../pages/Notifications";
 import Invitation from "../pages/Invitation";
 
 import TasksPage from "../pages/TaskPage";
+import Trash from "../pages/Trash";
 
 function AppRouter() {
   return (
@@ -21,6 +23,24 @@ function AppRouter() {
         element={
           <ProtectedRoute>
             <Projects />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/approve"
+        element={
+          <ProtectedRoute>
+            <Approve />
+          </ProtectedRoute>
+        }
+      />
+
+         <Route
+        path="/trash"
+        element={
+          <ProtectedRoute>
+            <Trash />
           </ProtectedRoute>
         }
       />

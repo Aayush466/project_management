@@ -5,21 +5,20 @@ import {
   FiMoreHorizontal,
   FiAlignLeft,
   FiTrash2,
-  FiTag,
-  FiClock,
-  FiPaperclip,
-  FiChevronDown,
 } from "react-icons/fi";
-import { BiDetail } from "react-icons/bi";
-import { MdOutlineDescription } from "react-icons/md";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { ArchiveRestore, Trash2 } from "lucide-react";
+import { BiDetail } from "react-icons/bi";
+import { FiPaperclip } from "react-icons/fi";
+import { MdOutlineDescription } from "react-icons/md";
+import { setTrashCards, setTrashLists } from "../features/profile/profileSlice";
 
 // --- TaskCard Component ---
 const TaskCard = ({ card, listId, onOpenTask, onDeleteCard }) => (
   <div
     className="bg-white rounded-md shadow-sm p-2 mb-2 cursor-pointer hover:bg-gray-50 transition flex justify-between items-start group"
-    onClick={() => onOpenTask(card, listId)} // ✅ Whole card clickable
+    onClick={() => onOpenTask(card, listId)}
   >
     <div>
       <p className="text-sm text-gray-800 break-words">{card.title}</p>
@@ -37,13 +36,12 @@ const TaskCard = ({ card, listId, onOpenTask, onDeleteCard }) => (
       )}
     </div>
 
-    {/* Hover actions */}
     <div
       className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity"
-      onClick={(e) => e.stopPropagation()} // ✅ Prevent modal open when deleting
+      onClick={(e) => e.stopPropagation()}
     >
       <button
-        onClick={() => onDeleteCard(listId, card._id)}
+        onClick={() => onDeleteCard(listId, card._id, card.title)}
         className="text-red-500 hover:text-red-700"
       >
         <FiTrash2 />
@@ -77,7 +75,6 @@ const KanbanList = ({
 
   return (
     <div className="relative w-72 flex-shrink-0 bg-gray-100 bg-opacity-90 rounded-lg shadow p-3 max-h-[calc(100vh-8rem)] flex flex-col">
-      {/* List Header */}
       <div className="flex justify-between items-center mb-2 relative">
         <h2 className="text-sm font-semibold text-gray-800 truncate">
           {list.title}
@@ -104,9 +101,8 @@ const KanbanList = ({
         </div>
       </div>
 
-      {/* Cards */}
       <div className="flex-grow overflow-y-auto custom-scrollbar pr-1">
-        {(list.cards || []).map((card) => (
+        {(list.cards || []).filter(card => card.trash !== true).map((card) => (
           <TaskCard
             key={card._id || card.title}
             card={card}
@@ -116,7 +112,6 @@ const KanbanList = ({
           />
         ))}
 
-        {/* Add Card Form */}
         {isAddingTask && (
           <div className="mb-2">
             <input
@@ -150,7 +145,6 @@ const KanbanList = ({
         )}
       </div>
 
-      {/* Add Card Button */}
       {!isAddingTask && (
         <button
           onClick={() => setIsAddingTask(true)}
@@ -161,24 +155,6 @@ const KanbanList = ({
       )}
     </div>
   );
-};
-
-// --- TaskDetailModal Component (with working attachments) ---
-const formatDateTime = (isoString) => {
-  if (!isoString) return null;
-  try {
-    const date = new Date(isoString);
-    // Format: Nov 19, 11:00 AM
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch (e) {
-    return isoString;
-  }
 };
 
 // --- Helper function to get the YYYY-MM-DD date part ---
@@ -626,32 +602,80 @@ const TaskDetailModal = ({
 // --- BoardView Component ---
 const BoardView = ({ boardData, onBackToDashboard }) => {
   const [lists, setLists] = useState(
-    boardData.lists?.map((l) => ({ ...l, cards: l.cards || [] })) || []
+    boardData.lists
+      ?.filter((list) => list.trash !== true)
+      .map((l) => ({ ...l, cards: l.cards || [] })) || []
   );
+
+  const dispatch = useDispatch();
+  const globalTrashedLists = useSelector(
+    (state) => state.profile?.trashLists || []
+  );
+  const globalTrashedCards = useSelector(
+    (state) => state.profile?.trashCards || []
+  );
+  const [trashLists, setTrashListsLocal] = useState([]);
+  const [trashCards, setTrashCardsLocal] = useState([]);
+  const [activeBar, setActiveBar] = useState("default");
   const [selectedTaskDetails, setSelectedTaskDetails] = useState(null);
   const [openAddList, setOpenAddList] = useState(false);
   const [newListName, setNewListName] = useState("");
+  const navigate = useNavigate();
 
-  // --- Add Card ---
+  // Sync trash lists/cards for this board
+  useEffect(() => {
+    setTrashListsLocal(
+      globalTrashedLists.filter((tl) => tl.boardId === boardData._id)
+    );
+    setTrashCardsLocal(
+      globalTrashedCards.filter((tc) => tc.boardId === boardData._id)
+    );
+  }, [globalTrashedLists, globalTrashedCards, boardData._id]);
+
+  // Add new list
+  const handleAddList = async (title) => {
+    if (!title.trim()) {
+      setOpenAddList(false);
+      setNewListName("");
+      return;
+    }
+    try {
+      const response = await axios.post(
+        `http://localhost:5000/api/lists/${boardData._id}`,
+        { title },
+        { withCredentials: true }
+      );
+      const createdList = response.data?.data || {
+        _id: Date.now().toString(),
+        title,
+        cards: [],
+        trash: false,
+      };
+      setLists((prev) => [...prev, createdList]);
+      setOpenAddList(false);
+      setNewListName("");
+    } catch (error) {
+      console.error("Error adding list", error);
+      alert("Failed to add list.");
+    }
+  };
+
+  // Add card to a list
   const handleAddTask = async (listId, title) => {
+    if (!title.trim()) return;
     try {
       const response = await axios.post(
         `http://localhost:5000/api/cards/${boardData._id}/${listId}`,
         { title },
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        }
+        { withCredentials: true }
       );
-
-      const createdTask = {
-        ...(response.data || {}),
-        _id: response.data.data?._id || Date.now().toString(),
-        title: response.data?.title || title,
+      const createdTask = response.data?.data || {
+        _id: Date.now().toString(),
+        title,
+        trash: false,
       };
-
-      setLists((prev) =>
-        prev.map((list) =>
+      setLists((prevLists) =>
+        prevLists.map((list) =>
           list._id === listId
             ? { ...list, cards: [...(list.cards || []), createdTask] }
             : list
@@ -659,79 +683,215 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
       );
     } catch (error) {
       console.error("Error adding task:", error);
-      alert("Failed to add card. Check console for details.");
+      alert("Failed to add card.");
     }
   };
 
-  // --- Delete Card ---
-  const handleDeleteCard = async (listId, cardId) => {
+  // Soft delete card - move to trash
+  const handleDeleteCard = async (listId, cardId, cardTitle) => {
     try {
       await axios.delete(
         `http://localhost:5000/api/cards/${boardData._id}/${listId}/${cardId}`,
         { withCredentials: true }
       );
 
-      setLists((prev) =>
-        prev.map((list) =>
-          list._id === listId
-            ? {
-                ...list,
-                cards: list.cards.filter((card) => card._id !== cardId),
-              }
-            : list
-        )
+      setTrashCardsLocal([
+        ...trashCards,
+        { listId, cardId, boardId: boardData._id, title: cardTitle },
+      ]);
+      dispatch(
+        setTrashCards([
+          ...trashCards,
+          { listId, cardId, boardId: boardData._id, title: cardTitle },
+        ])
+      );
+
+      setLists((prevLists) =>
+        prevLists.map((list) => {
+          if (list._id === listId) {
+            return {
+              ...list,
+              cards: (list.cards || []).map((card) =>
+                card._id === cardId ? { ...card, trash: true } : card
+              ),
+            };
+          }
+          return list;
+        })
       );
     } catch (error) {
       console.error("Error deleting card:", error);
-      alert("Failed to delete card. Check console for details.");
+      alert("Failed to delete card.");
     }
   };
 
-  // --- Add List ---
-  const handleAddList = async (title) => {
-    setOpenAddList(false);
-    if (!title) return;
+  const handleCloseTask = () => setSelectedTaskDetails(null);
 
-    try {
-      const response = await axios.post(
-        `http://localhost:5000/api/lists/${boardData._id}`,
-        { title },
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      const createdList = {
-        ...(response.data || {}),
-        _id: response.data.data?._id || Date.now().toString(),
-        title: response.data?.title || title,
-        cards: response.data?.cards || [],
-      };
-
-      setLists((prevLists) => [...prevLists, createdList]);
-      setNewListName("");
-    } catch (error) {
-      console.error("Error adding list:", error);
-      alert("Failed to add list. Check console for details.");
-    }
+  // --- Update Task After Save ---
+  const handleUpdateTask = (updatedTask) => {
+    setLists((prev) =>
+      prev.map((list) =>
+        list._id === updatedTask.listId
+          ? {
+              ...list,
+              cards: list.cards.map((card) =>
+                card._id === updatedTask._id ? updatedTask : card
+              ),
+            }
+          : list
+      )
+    );
   };
 
-  // --- Delete List ---
+
+  // Soft delete list - move to trash
   const handleDeleteList = async (listId) => {
     try {
       await axios.delete(
         `http://localhost:5000/api/lists/${boardData._id}/${listId}`,
         { withCredentials: true }
       );
+      dispatch(
+        setTrashLists([
+          ...globalTrashedLists,
+          {
+            listId,
+            boardId: boardData._id,
+            title:
+              lists.find((list) => list._id === listId)?.title || "Untitled List",
+          },
+        ])
+      );
       setLists((prev) => prev.filter((list) => list._id !== listId));
+      alert("List deleted successfully!");
     } catch (error) {
       console.error("Error deleting list:", error);
-      alert("Failed to delete list. Check console for details.");
+      alert("Failed to delete list.");
     }
   };
 
-  // --- Open Task Modal ---
+  // Restore list from trash
+  const handleRestoreList = async (listId) => {
+    try {
+      const res = await axios.put(
+        `http://localhost:5000/api/lists/restore/${boardData._id}/${listId}`,
+        {},
+        { withCredentials: true }
+      );
+      if (res.data.success) {
+        alert("List restored successfully!");
+
+        const updatedTrashLists = trashLists.filter((list) => list.listId !== listId);
+        setTrashListsLocal(updatedTrashLists);
+        dispatch(setTrashLists(updatedTrashLists));
+
+        const restoredList = boardData.lists.find((list) => list._id === listId);
+        if (restoredList) {
+          const filteredList = {
+            ...restoredList,
+            trash: false,
+            cards: (restoredList.cards || []).filter(
+              (card) => !trashCards.some((trashCard) => trashCard.cardId === card._id)
+            ),
+          };
+          setLists((prevLists) => [
+            ...prevLists.filter((list) => list._id !== listId),
+            filteredList,
+          ]);
+        }
+      } else {
+        alert("Failed to restore list.");
+      }
+    } catch (error) {
+      console.error("Restore list failed:", error);
+      alert("Error restoring list.");
+    }
+  };
+
+  // Restore card from trash
+  const handleRestoreCard = async (cardId, listId) => {
+    try {
+      const res = await axios.put(
+        `http://localhost:5000/api/cards/restore/${boardData._id}/${listId}/${cardId}`,
+        {},
+        { withCredentials: true }
+      );
+      if (res.data.success) {
+        alert("Card restored successfully!");
+
+        const updatedTrashCards = trashCards.filter((card) => card.cardId !== cardId);
+        setTrashCardsLocal(updatedTrashCards);
+        dispatch(setTrashCards(updatedTrashCards));
+
+        setLists((prevLists) =>
+          prevLists.map((list) => {
+            if (list._id === listId) {
+              return {
+                ...list,
+                cards: (list.cards || []).map((card) =>
+                  card._id === cardId ? { ...card, trash: false } : card
+                ),
+              };
+            }
+            return list;
+          })
+        );
+      } else {
+        alert("Failed to restore card.");
+      }
+    } catch (error) {
+      console.error("Restore card failed:", error);
+      alert("Error restoring card.");
+    }
+  };
+
+  // Permanently delete list - only possible from trash
+  const handlePermanentDeleteList = async (boardId, listId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to permanently delete this list? This action cannot be undone."
+      )
+    )
+      return;
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/lists/delete/${boardId}/${listId}`,
+        { withCredentials: true }
+      );
+      const updatedTrashLists = trashLists.filter((list) => list.listId !== listId);
+      setTrashListsLocal(updatedTrashLists);
+      dispatch(setTrashLists(updatedTrashLists));
+      alert("List permanently deleted.");
+    } catch (error) {
+      console.error("Permanent delete failed:", error);
+      alert("Failed to permanently delete list.");
+    }
+  };
+
+  // Permanently delete card - only possible from trash
+  const handlePermanentDeleteCard = async (boardId, listId, cardId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to permanently delete this card? This action cannot be undone."
+      )
+    )
+      return;
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/cards/delete/${boardId}/${listId}/${cardId}`,
+        { withCredentials: true }
+      );
+      const updatedTrashCards = trashCards.filter((card) => card.cardId !== cardId);
+      setTrashCardsLocal(updatedTrashCards);
+      dispatch(setTrashCards(updatedTrashCards));
+      alert("Card permanently deleted.");
+    } catch (error) {
+      console.error("Permanent delete failed:", error);
+      alert("Failed to permanently delete card.");
+    }
+  };
+
+ // --- Open Task Modal ---
   const handleOpenTask = (card, listId) => {
     const fetchTaskData = async () => {
       try {
@@ -759,168 +919,182 @@ const BoardView = ({ boardData, onBackToDashboard }) => {
     fetchTaskData();
   };
 
-  const handleCloseTask = () => setSelectedTaskDetails(null);
-
-  // --- Update Task After Save ---
-  const handleUpdateTask = (updatedTask) => {
-    setLists((prev) =>
-      prev.map((list) =>
-        list._id === updatedTask.listId
-          ? {
-              ...list,
-              cards: list.cards.map((card) =>
-                card._id === updatedTask._id ? updatedTask : card
-              ),
-            }
-          : list
-      )
-    );
-  };
-
-  const boardTitle = boardData.title;
-  const boardBg = "bg-blue-600";
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 👈 NEW STATE
-
-  const boards = useSelector((state) => state.profile.user.myBoards);
-
-  const navigate = useNavigate();
-
   return (
     <div className="flex flex-col h-screen overflow-hidden relative">
-      {/* Sidebar */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-40 transform transition-transform duration-300 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-lg font-semibold">My Board List </h2>
+      <div className="p-4 bg-blue-600 text-white flex justify-between items-center flex-shrink-0">
+        <h1 className="text-xl font-bold truncate">{boardData.title}</h1>
+        <div>
           <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="text-gray-500 hover:text-gray-700 text-xl"
+            onClick={() => setActiveBar("default")}
+            className={`px-4 py-2 rounded ${
+              activeBar === "default"
+                ? "bg-white text-blue-600"
+                : "bg-blue-500"
+            }`}
           >
-            &times;
+            Board
           </button>
-        </div>
-        <div className="p-4">
-          <ul className="space-y-3 text-gray-700">
-            {boards && boards.length > 0 ? (
-              boards.map((board) => (
-                <li
-                  key={board._id}
-                  className="hover:text-blue-600 cursor-pointer flex items-center justify-between"
-                  onClick={() => handleOpenBoard(board._id)} // 👉 You can define this to navigate/open board
-                >
-                  <span>{board.title}</span>
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-500 italic">No boards found</li>
-            )}
-          </ul>
+          <button
+            onClick={() => setActiveBar("trashes")}
+            className={`px-4 py-2 rounded ${
+              activeBar === "trashes"
+                ? "bg-white text-blue-600"
+                : "bg-blue-500"
+            } ml-2`}
+          >
+            Trash
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-white text-blue-600 px-4 py-2 rounded ml-2"
+          >
+            Back
+          </button>
         </div>
       </div>
 
-      {/* Overlay (when sidebar is open) */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
+      {activeBar === "default" && (
+        <div className="flex-1 overflow-x-auto p-4 flex space-x-4 items-start bg-[#0079bf]">
+          {lists.map((list) => (
+            <KanbanList
+              key={list._id}
+              list={list}
+              onAddTask={handleAddTask}
+              onDeleteList={handleDeleteList}
+              onOpenTask={handleOpenTask}
+              onDeleteCard={handleDeleteCard}
+            />
+          ))}
+          <div className="w-72 flex-shrink-0">
+            {!openAddList ? (
+              <button
+                onClick={() => setOpenAddList(true)}
+                className="w-full bg-black bg-opacity-10 hover:bg-opacity-20 rounded-lg p-3 h-12 flex items-center text-white text-sm transition cursor-pointer"
+              >
+                <FiPlus className="mr-1" /> Add another list
+              </button>
+            ) : (
+              <div className="bg-gray-200 rounded-lg p-3 shadow-md">
+                <input
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  onBlur={() => handleAddList(newListName)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddList(newListName);
+                    else if (e.key === "Escape") setOpenAddList(false);
+                  }}
+                  placeholder="Enter list title..."
+                  className="w-full rounded-md p-2 text-sm border-blue-500 focus:ring-blue-500 outline-none shadow-sm"
+                  autoFocus
+                />
+                <div className="flex items-center mt-2">
+                  <button
+                    onClick={() => handleAddList(newListName)}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm mr-2"
+                  >
+                    Add list
+                  </button>
+                  <button
+                    onClick={() => setOpenAddList(false)}
+                    className="text-gray-500 hover:text-gray-700 text-xl"
+                  >
+                    &#x2715;
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* Header */}
-      <div
-        className={`p-4 ${boardBg} text-white flex justify-between items-center flex-shrink-0`}
-      >
-        {/* Left Section */}
-        <div className="flex items-center space-x-4">
+      {activeBar === "trashes" && (
+        <div className="p-4 bg-[#0079bf] flex flex-col flex-grow overflow-y-auto space-y-4">
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200 group"
-            title="Toggle Sidebar"
+            onClick={() => setActiveBar("default")}
+            className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-100 self-end"
           >
-            <div className="space-y-1.5">
-              <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
-              <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
-              <span className="block w-5 h-0.5 bg-gray-700 group-hover:bg-blue-600 transition-all"></span>
-            </div>
+            Back to Board
           </button>
-          <h1 className="text-xl font-bold truncate">{boardTitle}</h1>
-        </div>
 
-        {/* Right Section */}
-        <button
-          onClick={() => navigate(-1)}
-          className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-100 transition-all cursor-pointer"
-        >
-          Back
-        </button>
-      </div>
-
-      {/* className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-md text-sm transition" */}
-      {/* Kanban Board */}
-      <div
-        className="flex-1 overflow-x-auto p-4 flex space-x-4 items-start"
-        style={{ backgroundColor: "#0079bf" }}
-      >
-        {lists.map((list) => (
-          <KanbanList
-            key={list._id}
-            list={list}
-            onAddTask={handleAddTask}
-            onDeleteList={handleDeleteList}
-            onOpenTask={handleOpenTask}
-            onDeleteCard={handleDeleteCard}
-          />
-        ))}
-
-        {/* Add New List */}
-        <div className="w-72 flex-shrink-0">
-          {!openAddList ? (
-            <button
-              onClick={() => setOpenAddList(true)}
-              className="w-full bg-black bg-opacity-10 hover:bg-opacity-20 rounded-lg p-3 h-12 flex items-center text-white text-sm transition cursor-pointer"
-            >
-              <FiPlus className="mr-1" /> Add another list
-            </button>
-          ) : (
-            <div className="bg-gray-200 rounded-lg p-3 shadow-md">
-              <input
-                type="text"
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-                onBlur={() => handleAddList(newListName)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddList(newListName);
-                  else if (e.key === "Escape") setOpenAddList(false);
-                }}
-                placeholder="Enter list title..."
-                className="w-full rounded-md p-2 text-sm border-blue-500 focus:ring-blue-500 outline-none shadow-sm"
-                autoFocus
-              />
-              <div className="flex items-center mt-2">
-                <button
-                  onClick={() => handleAddList(newListName)}
-                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm mr-2"
-                >
-                  Add list
-                </button>
-                <button
-                  onClick={() => setOpenAddList(false)}
-                  className="text-gray-500 hover:text-gray-700 text-xl"
-                >
-                  &#x2715;
-                </button>
-              </div>
-            </div>
+          {(trashLists.length === 0 && trashCards.length === 0) && (
+            <h3 className="text-white">Trash is empty</h3>
           )}
-        </div>
-      </div>
 
-      {/* Task Modal */}
-      {selectedTaskDetails && (
+          <div className="flex flex-wrap gap-6">
+            {trashLists.map((trashList, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-md overflow-hidden w-64 flex flex-col"
+              >
+                <div className="text-red-600 bg-gray-200 px-2 py-1 flex justify-between items-center">
+                  <h4>List</h4>
+                  <button
+                    onClick={() => handleRestoreList(trashList.listId)}
+                    className="p-1 rounded-full cursor-pointer"
+                    title="Restore list"
+                  >
+                    <ArchiveRestore className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handlePermanentDeleteList(boardData._id, trashList.listId)}
+                    className="p-1 rounded-full cursor-pointer text-red-600 hover:text-red-800"
+                    title="Permanently delete list"
+                  >
+                    <FiTrash2 className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="px-2 py-1">
+                  <div className="flex gap-2">
+                    <span>Id:</span>{" "}
+                    <span className="text-gray-600">{trashList.listId}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span>Title:</span>{" "}
+                    <span className="text-gray-600">{trashList.title}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {trashCards.map((trashCard, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-md overflow-hidden w-64 flex flex-col"
+              >
+                <div className="text-red-600 bg-gray-200 px-2 py-1 flex justify-between items-center">
+                  <h4>Card</h4>
+                  <button
+                    onClick={() => handleRestoreCard(trashCard.cardId, trashCard.listId)}
+                    className="p-1 rounded-full cursor-pointer"
+                    title="Restore card"
+                  >
+                    <ArchiveRestore className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handlePermanentDeleteCard(boardData._id, trashCard.listId, trashCard.cardId)}
+                    className="p-1 rounded-full cursor-pointer text-red-600 hover:text-red-800"
+                    title="Permanently delete card"
+                  >
+                    <FiTrash2 className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="px-2 py-1">
+                  <div className="flex gap-2">
+                    <span>Id:</span>{" "}
+                    <span className="text-gray-600">{trashCard.cardId}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span>Title:</span>{" "}
+                    <span className="text-gray-600">{trashCard.title}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+       {selectedTaskDetails && (
         <TaskDetailModal
           task={selectedTaskDetails.task}
           listName={selectedTaskDetails.listName}

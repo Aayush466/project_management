@@ -241,7 +241,7 @@ const DashboardLayoutWithBoardList = () => {
   }
 
   // --- Render Dashboard View ---
-  const boards = userData?.myBoards || [];
+  const boards = userData?.myBoards.filter(myBoard=>myBoard.trash==false) || [];
 
   return (
     <div className="flex h-screen bg-gray-50">
