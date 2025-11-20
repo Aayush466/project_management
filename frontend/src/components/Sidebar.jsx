@@ -73,11 +73,23 @@ const Sidebar = ({ isOpen, onClose }) => {
           path: "/approve",
           icon: <FolderKanban size={20} />,
         },
+        {
+          name: "Approved User",
+          path: "/approved-users",
+          icon: <FolderKanban size={20} />,
+        },
+        {
+          name: "Rejected User",
+          path: "/rejected-users",
+          icon: <FolderKanban size={20} />,
+        },
         { name: "Trash", path: "/trash", icon: <FolderKanban size={20} /> },
+        { name: "Profile", path: "/profile", icon: <FolderKanban size={20} /> },
       ]
     : [
         { name: "Board", path: "/dashboard", icon: <FolderKanban size={20} /> },
         { name: "Trash", path: "/trash", icon: <FolderKanban size={20} /> },
+        { name: "Profile", path: "/profile", icon: <FolderKanban size={20} /> }
       ];
 
   const sidebarClasses = `

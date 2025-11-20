@@ -7,6 +7,9 @@ import Approve from "../pages/Approve";
 import Projects from "../pages/Projects";
 
 import Trash from "../pages/Trash";
+import AdminProfile from "../pages/AdminProfile";
+import ApprovedUser from "../pages/ApprovedUser";
+import RejectedUser from "../pages/RejectedUser";
 
 function AppRouter() {
   return (
@@ -39,6 +42,33 @@ function AppRouter() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <AdminProfile />
+          </ProtectedRoute>
+        }
+      />
+
+       <Route
+        path="/approved-users"
+        element={
+          <ProtectedRoute>
+            <ApprovedUser />
+          </ProtectedRoute>
+        }
+      />
+
+       <Route
+        path="/rejected-users"
+        element={
+          <ProtectedRoute>
+            <RejectedUser />
+          </ProtectedRoute>
+        }
+        />
 
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>

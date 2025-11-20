@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { setProfile,setPendingUsers, setAdmin,setTrashBoards,setBoards} from "../features/profile/profileSlice";
+import { setProfile,setPendingUsers, setAdmin,setTrashBoards,setBoards, setAcceptedUsers, setRejectedUsers} from "../features/profile/profileSlice";
 
 const ProtectedRoute = ({ children }) => {
   const [authState, setAuthState] = useState("loading"); 
@@ -21,6 +21,8 @@ const ProtectedRoute = ({ children }) => {
           dispatch(setProfile(res.data.data));
           dispatch(setAdmin(res.data.admin));
           dispatch(setPendingUsers(res.data.pendingUsers?res.data.pendingUsers:[]))
+          dispatch(setAcceptedUsers(res.data.acceptedUsers?res.data.acceptedUsers:[]))
+          dispatch(setRejectedUsers(res.data.rejectedUsers?res.data.rejectedUsers:[]))
           dispatch(setTrashBoards(res.data.data.trashBoards))
           dispatch(setBoards(res.data.data.myBoards.filter(board=>!board.trash)))
                     

@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import { useSelector, useDispatch } from "react-redux";
-import { setPendingUsers } from "../features/profile/profileSlice";
+import { setAcceptedUsers,setRejectedUsers } from "../features/profile/profileSlice";
 import { useNavigate } from "react-router-dom";
-
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion"; // 👈 Import motion and AnimatePresence
 
@@ -40,22 +39,25 @@ const listItemVariants = {
 };
 // ------------------------------
 
-export default function Approve() {
+export default function RejectedUser() {
   const [openSideBar, setOpenSideBar] = useState(false);
   const isAdmin = useSelector((state) => state.profile?.admin);
   const dispatch = useDispatch();
-  const pendingUsers = useSelector(
-    (state) => state.profile?.pendingUsers || []
+  const acceptedUsers = useSelector(
+    (state) => state.profile?.acceptedUsers || []
+  );
+  const rejectedUsers = useSelector(
+    (state) => state.profile?.rejectedUsers || []
   );
   const navigate = useNavigate();
   const [isApproving, setIsApproving] = useState(false); // New state for loading indicator
-  const [isRejecting, setIsRejecting] = useState(false); // New state for loading indicator
+
 
   useEffect(() => {
     if (!isAdmin) navigate("/dashboard");
   }, [isAdmin, navigate]);
 
-  // ✅ Approve user handler
+    // ✅ Approve user handler
   const handleApprove = async (userEmail) => {
     setIsApproving(true);
     try {
@@ -67,10 +69,17 @@ export default function Approve() {
       );
 
       if (response.data.success) {
+       const acceptedUser = rejectedUsers.filter((acceptedUser) => acceptedUser.email != userEmail)
         // No alert needed, the visual transition handles feedback
         dispatch(
-          setPendingUsers(
-            pendingUsers.filter((pendingUser) => pendingUser.email != userEmail)
+          setRejectedUsers(
+            rejectedUsers.filter((rejectedUser) => rejectedUser.email != userEmail)
+          )
+        );
+
+         dispatch(
+          setAcceptedUsers(
+            [...acceptedUsers,...acceptedUser]
           )
         );
       } else {
@@ -84,34 +93,6 @@ export default function Approve() {
     }
   };
 
-    // Reject User
-    const handleReject = async (userEmail) => {
-    setIsRejecting(true);
-    try {
-      // Call your backend API (replace with your real endpoint)
-      const response = await axios.post(
-        "http://localhost:5000/api/users/reject",
-        { email: userEmail },
-        { withCredentials: true }
-      );
-
-      if (response.data.success) {
-        // No alert needed, the visual transition handles feedback
-        dispatch(
-          setPendingUsers(
-            pendingUsers.filter((pendingUser) => pendingUser.email != userEmail)
-          )
-        );
-      } else {
-        alert("Something went wrong. Please try again.");
-      }
-    } catch (error) {
-      console.error("Rejecting failed:", error);
-      alert("Error rejecting user. Please try again later.");
-    } finally {
-        setIsRejecting(false);
-    }
-  };
 
 
   return (
@@ -131,13 +112,13 @@ export default function Approve() {
         >
           {/* --- Header --- */}
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8 pb-2 border-b border-gray-200">
-            Admin Dashboard
+            Restore Users
           </h1>
 
           {/* --- Approve User Requests Section --- */}
           <div className="bg-white p-6 rounded-xl border border-gray-200">
             <h3 className="text-xl font-semibold mb-6 text-gray-800 flex items-center">
-              <span className="mr-3 text-blue-600">👤</span> Approve User Requests
+              <span className="mr-3 text-blue-600">👤</span> Rejected Users
             </h3>
 
             {/* User List with Staggered Entrance and Exit */}
@@ -148,10 +129,10 @@ export default function Approve() {
                 animate="visible"
             >
               <AnimatePresence>
-                {pendingUsers.length > 0 ? (
-                  pendingUsers.map((pendingUser) => (
+                {rejectedUsers.length > 0 ? (
+                  rejectedUsers.map((rejectedUser) => (
                     <motion.li // 👈 Apply item animation
-                      key={pendingUser.email}
+                      key={rejectedUser.email}
                       variants={listItemVariants}
                       initial="initial"
                       animate="animate"
@@ -163,8 +144,8 @@ export default function Approve() {
                       <div className="flex items-center space-x-4">
                         {/* Professional Avatar */}
                         <span className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-base font-bold flex-shrink-0">
-                          {pendingUser.name
-                            ? pendingUser.name.charAt(0).toUpperCase()
+                          {rejectedUser.name
+                            ? rejectedUser.name.charAt(0).toUpperCase()
                             : "U"}
                         </span>
 
@@ -172,36 +153,26 @@ export default function Approve() {
                         <div className="min-w-0">
                           {/* Name - Bolder and larger */}
                           <p className="font-semibold text-gray-800 text-base truncate">
-                            {pendingUser.name || "Unknown User"}
+                            {rejectedUser.name || "Unknown User"}
                           </p>
                           {/* Email - Subtle and clear, ensures truncation for mobile safety */}
                           <p className="text-sm text-gray-500 truncate">
-                            {pendingUser.email}
+                            {rejectedUser.email}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex gap-3 flex-wrap justify-end">
-                                              {/* ✅ Approve button */}
+                      <div className="flex space-x-3">
+             
+                                            {/* ✅ Approve button */}
                       <motion.button // 👈 Apply button interactions
-                        onClick={() => handleApprove(pendingUser.email)}
+                        onClick={() => handleApprove(rejectedUser.email)}
                         disabled={isApproving}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="w-full sm:w-auto px-4 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition duration-150 flex-shrink-0 disabled:opacity-70 disabled:cursor-not-allowed"
                       >
-                        {isApproving ? "Processing..." : "Approve User"}
-                      </motion.button>
-
-                                            {/* ✅ Approve button */}
-                      <motion.button // 👈 Apply button interactions
-                        onClick={() => handleReject(pendingUser.email)}
-                        disabled={isRejecting}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-full sm:w-auto px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition duration-150 flex-shrink-0 disabled:opacity-70 disabled:cursor-not-allowed"
-                      >
-                        {isRejecting ? "Processing..." : "Rejecting User"}
+                        {isApproving ? "Processing..." : "Give Access"}
                       </motion.button>
                         </div>
                     </motion.li>
@@ -215,7 +186,7 @@ export default function Approve() {
                     exit={{ opacity: 0 }}
                     className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300"
                   >
-                    <p className="text-gray-500 font-medium">🎉 No pending users to approve!</p>
+                    <p className="text-gray-500 font-medium">🎉 No rejected users to give access!</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -223,7 +194,6 @@ export default function Approve() {
           </div>
         </motion.div>
       </div>
-     
     </div>
   );
 }
