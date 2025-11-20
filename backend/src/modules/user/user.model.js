@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
     },
     password: { type: String, required: true, minlength: 6 },
     access: { type: Boolean, default: false },
+    reject: { type: Boolean, default: false },
     myBoards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Board" }],
     trashBoards: [
       {type:mongoose.Schema.Types.ObjectId,ref:"Board"}

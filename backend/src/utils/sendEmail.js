@@ -108,6 +108,98 @@ export const approvedUserEmail = (adminmail, usermail) => {
   });
 };
 
+export const rejectedUserEmail = (adminmail, usermail) => {
+  const mailOptions = {
+    from: environmentVariables.email,
+    to: usermail,
+    subject: "Your Account Request Has Been Rejected",
+
+    html: `
+      <div style="
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        padding: 20px;
+      ">
+        <div style="
+          max-width: 600px;
+          margin: auto;
+          background: white;
+          padding: 25px;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        ">
+
+          <h2 style="color: #e63946; margin-bottom: 15px;">
+            Account Request Rejected
+          </h2>
+
+          <p style="font-size: 15px; color: #333;">
+            Hello,
+          </p>
+
+          <p style="font-size: 15px; color: #555; line-height: 1.6;">
+            We appreciate your interest. Unfortunately, your recent request for account access was 
+            <strong style="color: #e63946;">not approved</strong> by our administrator.
+          </p>
+
+          <p style="font-size: 15px; color: #555; line-height: 1.6;">
+            If you believe this was a mistake or you would like more information, you may contact our admin:
+          </p>
+
+          <p style="font-size: 15px; color: #1d3557;">
+            Admin Email: <strong>${adminmail}</strong>
+          </p>
+
+          <p style="font-size: 15px; color: #555; margin-top: 20px;">
+            Thank you for understanding.
+          </p>
+
+          <p style="font-size: 14px; color: #888; margin-top: 25px;">
+            — The Team
+          </p>
+
+        </div>
+      </div>
+    `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log("Error sending approval email:", error);
+    } else {
+      console.log("Approval email sent successfully:", info.response);
+    }
+  });
+};
+
+export const userProfileUpdatedEmail = (adminmail, usermail, username) => {
+  const mailOptions = {
+    from: environmentVariables.email,
+    to: usermail,
+    subject: "Your Profile Has Been Updated",
+
+    html: `
+      <div>
+        <p>Hi ${username},</p>
+        <p>Your profile details have been updated successfully by the admin.</p>
+
+        <p>If you did not request this change, please contact us immediately.</p>
+
+        <p>Regards,<br/>Admin (${adminmail})</p>
+      </div>
+    `,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log("Error sending profile update email:", error);
+    } else {
+      console.log("User profile update email sent successfully:", info.response);
+    }
+  });
+};
+
+
 
 export const sendResetOtpService = (mail, otp, resetOtpExpiry) => {
   const mailOptions = {

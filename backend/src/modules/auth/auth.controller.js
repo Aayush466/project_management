@@ -94,6 +94,11 @@ export const login = async (req, res, next) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+    if(user.reject && user.email!=environmentVariables.adminEmail)
+    {
+      return res.status(400).json({ message: "Admin rejected you, can't login" });
+    }
+
     if(!user.access && user.email!=environmentVariables.adminEmail)
     {
       return res.status(400).json({ message: "Admin not yet approved you, can't login" });
