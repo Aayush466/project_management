@@ -306,8 +306,4 @@ const DashboardLayoutWithBoardList = () => {
   );
 };
 
-<<<<<<< HEAD
-export default Projects;
-=======
 export default DashboardLayoutWithBoardList;
->>>>>>> shiva

@@ -32,62 +32,12 @@ const Sidebar = ({ isOpen, onClose }) => {
         alert("Logout failed. Please try again.");
       }
     } catch (error) {
-<<<<<<< HEAD
-      console.error("Logout error:", error);
-=======
->>>>>>> shiva
       alert(
         error.response?.data?.message || "Something went wrong during logout."
       );
     }
   };
 
-<<<<<<< HEAD
-  const links = [
-    {
-      name: "Overview",
-      path: "/overview",
-      icon: <LayoutDashboard size={20} />,
-    },
-    { name: "Team", path: "/team", icon: <Users size={20} /> },
-    { name: "Projects", path: "/projects", icon: <FolderKanban size={20} /> },
-    { name: "Tasks", path: "/tasks", icon: <ListChecks size={20} /> },
-    { name: "Invitation", path: "/invitation", icon: <Bell size={20} /> },
-  ];
-
-  return (
-    <div className="h-screen bg-[#7B3931] text-white w-64 p-5 flex flex-col justify-between">
-      {/* ---- Top Section ---- */}
-      <div>
-        <h1 className="text-2xl font-bold mb-8 text-center">Project Manager</h1>
-        <nav className="space-y-3">
-          {links.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all ${
-                location.pathname === link.path
-                  ? "bg-white text-[#7B3931] font-semibold"
-                  : "hover:bg-[#934940]"
-              }`}
-            >
-              {link.icon}
-              <span>{link.name}</span>
-            </Link>
-          ))}
-        </nav>
-      </div>
-
-      {/* ---- Logout Button ---- */}
-      <button
-        onClick={handleLogout}
-        className="flex items-center space-x-3 px-4 py-2 mt-6 rounded-lg hover:bg-[#934940] transition-all text-left cursor-pointer"
-      >
-        <Settings size={20} />
-        <span>Logout</span>
-      </button>
-    </div>
-=======
   // Click-away logic (desktop and mobile)
   useEffect(() => {
     if (!isOpen) return;
@@ -204,7 +154,6 @@ const Sidebar = ({ isOpen, onClose }) => {
         </button>
       </div>
     </>
->>>>>>> shiva
   );
 };
 
