@@ -1,53 +1,58 @@
 import { useState, useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
-import { setProfile } from "../features/profile/profileSlice";
+import { useDispatch } from "react-redux";
+import { setProfile,setPendingUsers, setAdmin,setTrashBoards,setBoards, setAcceptedUsers, setRejectedUsers} from "../features/profile/profileSlice";
 
 const ProtectedRoute = ({ children }) => {
-  const [authState, setAuthState] = useState("loading");
+  const [authState, setAuthState] = useState("loading"); 
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("https://projectmanagement-backend.up.railway.app/api/users/profile", {
-          credentials: "include", // include cookies if needed
+        const res = await axios.get("http://localhost:5000/api/users/profile", {
+          withCredentials: true, // ✅ includes cookies (like tokens)
         });
 
-        const data = await res.json();
-
-        if (data?.success && data?.data?._id) {
-          // ✅ User is authenticated
-            dispatch(setProfile(data.data))
+        if (res.data?.success && res.data?.data?._id) {
+          // ✅ User authenticated
+          dispatch(setProfile(res.data.data));
+          dispatch(setAdmin(res.data.admin));
+          dispatch(setPendingUsers(res.data.pendingUsers?res.data.pendingUsers:[]))
+          dispatch(setAcceptedUsers(res.data.acceptedUsers?res.data.acceptedUsers:[]))
+          dispatch(setRejectedUsers(res.data.rejectedUsers?res.data.rejectedUsers:[]))
+          dispatch(setTrashBoards(res.data.data.trashBoards))
+          dispatch(setBoards(res.data.data.myBoards.filter(board=>!board.trash)))
+                    
           setAuthState("authenticated");
-
         } else {
           // ❌ Not authenticated
           setAuthState("unauthenticated");
-          navigate("/login")
-
+          navigate("/login");
         }
       } catch (error) {
-        console.error("Error checking auth:", error);
+        console.error("Error checking auth at procted route:", error);
         setAuthState("unauthenticated");
-          navigate("/login")
-
+        navigate("/login");
       }
     };
 
     checkAuth();
-  }, []);
+  }, [dispatch, navigate]);
 
-  // Show loading state while checking auth
+  // While checking authentication
   if (authState === "loading") {
-    return <div className="text-center mt-8 text-gray-600">Checking authentication...</div>;
+    return (
+      <div className="text-center mt-8 text-gray-600">
+        Checking authentication...
+      </div>
+    );
   }
 
-  // If authenticated → render children, else redirect to login
+  // If authenticated, render children; else navigate handled already
   return children;
 };
-
 
 export default ProtectedRoute;

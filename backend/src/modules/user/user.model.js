@@ -11,33 +11,11 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     password: { type: String, required: true, minlength: 6 },
-    myUsers: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        acceptedAt: { type: Date, default: Date.now },
-      },
-    ],
-    myProjects: [
-      { type: mongoose.Schema.Types.ObjectId},
-    ],
-    invitedUsers: [{user:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],
-    invitations: [{admin:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },invitedAt:{ type: Date, default: Date.now }}],
-    rejectedUsers: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rejectedAt: { type: Date, default: Date.now },
-      },
-    ],
-    rejectedAdmins: [
-      {
-    admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    rejectedAt: { type: Date, default: Date.now },
-  },
-    ], acceptedAdmins: [
-      {
-    admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    rejectedAt: { type: Date, default: Date.now },
-  },
+    access: { type: Boolean, default: false },
+    reject: { type: Boolean, default: false },
+    myBoards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Board" }],
+    trashBoards: [
+      {type:mongoose.Schema.Types.ObjectId,ref:"Board"}
     ],
     hashedCode: { type: String, default: "" },
     expiresOtpAt: { type: Date, required: true },

@@ -1,163 +1,313 @@
-import React, { useState } from "react";
-import { FiPlus, FiClipboard } from "react-icons/fi";
+import { useState,useEffect } from "react";
+import Sidebar from "../components/Sidebar";
+import Topbar from "../components/Topbar";
+import axios from "axios";
+import BoardView from "./List"; // Import the board view component
+import { useDispatch, useSelector } from "react-redux";
+import { setBoards, setProfile, setTrashBoards } from "../features/profile/profileSlice";
+import { motion, AnimatePresence } from "framer-motion"; // 👈 Import motion and AnimatePresence
 
-const Projects = () => {
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: "Website Redesign",
-      description: "Revamp the landing page and add animations.",
-      tasks: [
-        { id: 1, title: "Design Mockups", status: "In Progress" },
-        { id: 2, title: "Frontend Implementation", status: "Pending" },
-      ],
+// --- Framer Motion Variants ---
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      delayChildren: 0.1,
+      staggerChildren: 0.07,
     },
-  ]);
+  },
+};
 
-  const [showForm, setShowForm] = useState(false);
-  const [newProject, setNewProject] = useState({ name: "", description: "" });
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
 
-  const handleCreateProject = (e) => {
-    e.preventDefault();
-    if (!newProject.name || !newProject.description)
-      return alert("Please fill all fields");
+const layoutVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+// ------------------------------
 
-    const project = {
-      id: Date.now(),
-      ...newProject,
-      tasks: [],
-    };
-
-    setProjects([...projects, project]);
-    setNewProject({ name: "", description: "" });
-    setShowForm(false);
-  };
-
-  const handleAddTask = (projectId) => {
-    const taskTitle = prompt("Enter task title:");
-    if (!taskTitle) return;
-
-    setProjects((prev) =>
-      prev.map((proj) =>
-        proj.id === projectId
-          ? {
-              ...proj,
-              tasks: [
-                ...proj.tasks,
-                { id: Date.now(), title: taskTitle, status: "Pending" },
-              ],
-            }
-          : proj
-      )
-    );
-  };
-
+// --- START: BoardListAndCreate (Animated Component) ---
+const BoardListAndCreate = ({
+  boards,
+  onCreateBoard,
+  onDeleteBoard,
+  onOpenBoard,
+}) => {
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Projects</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-        >
-          <FiPlus className="mr-2" /> New Project
-        </button>
-      </div>
-
-      {/* Create Project Form */}
-      {showForm && (
-        <form
-          onSubmit={handleCreateProject}
-          className="bg-white shadow rounded-lg p-6 mb-6"
-        >
-          <h2 className="text-lg font-medium mb-4">Create New Project</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="Project Name"
-              value={newProject.name}
-              onChange={(e) =>
-                setNewProject({ ...newProject, name: e.target.value })
-              }
-              className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 outline-none"
-            />
-            <input
-              type="text"
-              placeholder="Project Description"
-              value={newProject.description}
-              onChange={(e) =>
-                setNewProject({ ...newProject, description: e.target.value })
-              }
-              className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 outline-none"
-            />
-          </div>
-          <div className="text-right">
-            <button
-              type="submit"
-              className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
-            >
-              Create Project
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Project List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <div
-            key={project.id}
-            className="bg-white rounded-xl shadow hover:shadow-lg transition p-5 flex flex-col justify-between"
+    <motion.div // 👈 Apply container variant for staggered entrance
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Render existing boards */}
+      {boards &&
+        boards.length > 0 &&
+        boards.map((board) => (
+          <motion.div // 👈 Apply item variant for each board tile
+            key={board._id}
+            variants={itemVariants}
+            onClick={() => onOpenBoard(board._id)}
+            // Apply interaction animations
+            whileHover={{ scale: 1.03, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative w-full h-36 bg-white rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:border-blue-500 transition-all duration-300"
           >
-            <div>
-              <div className="flex items-center mb-2">
-                <FiClipboard className="text-blue-500 mr-2" />
-                <h2 className="text-lg font-semibold text-gray-800">
-                  {project.name}
-                </h2>
-              </div>
-              <p className="text-gray-600 mb-3">{project.description}</p>
-
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Tasks:</h3>
-              <ul className="space-y-2">
-                {project.tasks.length > 0 ? (
-                  project.tasks.map((task) => (
-                    <li
-                      key={task.id}
-                      className="flex justify-between items-center bg-gray-50 px-3 py-2 rounded-lg text-sm"
-                    >
-                      <span>{task.title}</span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          task.status === "Pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {task.status}
-                      </span>
-                    </li>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-sm">No tasks yet</p>
-                )}
-              </ul>
-            </div>
-
-            <div className="mt-4 text-right">
-              <button
-                onClick={() => handleAddTask(project.id)}
-                className="text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+            {/* Delete Icon - Visibility logic preserved, now with motion interaction */}
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteBoard(board._id);
+              }}
+              whileTap={{ scale: 0.9 }} // Small tap animation on the icon itself
+              className="absolute top-3 right-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center bg-white text-red-500 rounded-full p-1.5 shadow-md hover:bg-red-50 transition-all duration-300 z-10"
+              title="Delete board"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
               >
-                + Add Task
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m1-2a1 1 0 011-1h6a1 1 0 011 1v2"
+                />
+              </svg>
+            </motion.button>
+
+            {/* Accent Header Section - Softer, more professional color */}
+            <div className="h-3/5 bg-blue-500/80 p-3 flex items-center">
+              {/* Optional: Add an icon or pattern here */}
             </div>
-          </div>
+
+            {/* White Footer Section with Board Name - More padding and clearer text */}
+            <div className="h-2/5 p-4 flex flex-col justify-end">
+              <span className="text-gray-800 font-semibold text-lg truncate">
+                {board.title || "Untitled Board"}
+              </span>
+            </div>
+          </motion.div>
         ))}
+
+      {/* Always show Create New Board option */}
+      <motion.div
+        onClick={onCreateBoard}
+        variants={itemVariants} // Apply item variant for staggered entrance
+        whileHover={{ scale: 1.03 }} // Add hover interaction
+        whileTap={{ scale: 0.98 }} // Add tap interaction
+        className="w-full h-36 bg-gray-50 border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-gray-100 rounded-xl flex flex-col justify-center items-center text-center p-4 cursor-pointer transition-colors duration-200"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-8 w-8 text-blue-500 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        <span className="text-blue-600 font-medium text-base">
+          Create new board
+        </span>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// --- Dashboard Layout (Main Component) ---
+const DashboardLayoutWithBoardList = () => {
+  const [openSideBar, setOpenSideBar] = useState(false);
+  const dispatch = useDispatch();
+  const globalBoards = useSelector(state => state.profile.boards);
+  const globalTrashBoards = useSelector(state => state.profile.trashBoards);
+  const [boards, setLocalBoards] = useState(globalBoards);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [selectedBoard, setSelectedBoard] = useState(null); // store full board details
+
+  // Fetch boards on mount or when globalBoards changes
+  useEffect(() => {
+      setLocalBoards(globalBoards);
+  }, [globalBoards]);
+
+
+  // Create new board (function logic remains the same)
+  const handleCreateBoard = async () => {
+    // ... (logic remains the same)
+    const title = prompt("Enter board title:");
+    if (!title || title.trim() === "") {
+      alert("Board title is required!");
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const response = await axios.post(
+        "http://localhost:5000/api/boards",
+        { title },
+        { withCredentials: true }
+      );
+
+      const createdBoard = response.data.data;
+      const updatedBoards = [...boards, createdBoard];
+      setLocalBoards(updatedBoards);
+      dispatch(setBoards(updatedBoards));
+
+      if (response.data.success) {
+        alert("Board created successfully!");
+      } else {
+        alert("Failed to create board");
+      }
+    } catch (err) {
+      console.error("Error creating board:", err);
+      alert("Error creating board");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  // Delete a board (function logic remains the same)
+  const handleDeleteBoard = async (boardId) => {
+    // ... (logic remains the same)
+    if (!window.confirm("Are you sure you want to delete this board?")) return;
+
+    try {
+      setDeleting(true);
+      const response = await axios.delete(
+        `http://localhost:5000/api/boards/${boardId}`,
+        { withCredentials: true }
+      );
+
+      const deletedBoard = boards.filter((item) => item._id === boardId)[0];
+      const updatedBoards = boards.filter((item) => item._id !== boardId);
+      
+      setLocalBoards(updatedBoards);
+      dispatch(setBoards(updatedBoards));
+      dispatch(setTrashBoards([...globalTrashBoards, deletedBoard]));
+
+      if (response.data.success) {
+        alert("Board deleted successfully!");
+      } else {
+        alert("Failed to delete board");
+      }
+    } catch (err) {
+      console.error("Error deleting board:", err);
+      alert("Error deleting board");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Open a board (function logic remains the same)
+  const handleOpenBoard = async (boardId) => {
+    // ... (logic remains the same)
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5000/api/boards/${boardId}`,
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        setSelectedBoard(response.data.data); // store the entire board object
+      } else {
+        alert("Failed to open board");
+      }
+    } catch (err) {
+      console.error("Error opening board:", err);
+      alert("Error opening board");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Loading State with Animation ---
+  if (loading && !selectedBoard) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-gray-600 text-lg font-medium"
+        >
+          <span className="animate-spin mr-3 inline-block">⚙️</span> Loading board...
+        </motion.div>
+      </div>
+    );
+  }
+
+  // --- Render BoardView if a board is selected (No motion needed here as BoardView handles its own view) ---
+  if (selectedBoard) {
+    return (
+      <BoardView
+        boardData={selectedBoard}
+        setSelectedBoard={setSelectedBoard}
+      />
+    );
+  }
+
+  // --- Render Dashboard View ---
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar isOpen={openSideBar} onClose={setOpenSideBar} />
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        <Topbar handleOpenSideBar={setOpenSideBar} />
+
+        <motion.div // 👈 Apply layout entrance animation
+          className="p-4 md:p-8 w-full max-w-7xl mx-auto"
+          variants={layoutVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">
+            Your Workspaces
+          </h1>
+
+          <AnimatePresence>
+            {(creating || deleting) && (
+              <motion.div // 👈 Apply status banner animation
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex items-center text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6"
+              >
+                <span className="mr-2 animate-pulse">
+                  {creating ? "✨" : "🗑️"}
+                </span>
+                {creating ? "Creating new board, please wait..." : "Deleting board, moving to trash..."}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <BoardListAndCreate
+            boards={boards}
+            onCreateBoard={handleCreateBoard}
+            onDeleteBoard={handleDeleteBoard}
+            onOpenBoard={handleOpenBoard}
+          />
+        </motion.div>
       </div>
     </div>
   );
 };
 
+<<<<<<< HEAD
 export default Projects;
+=======
+export default DashboardLayoutWithBoardList;
+>>>>>>> shiva

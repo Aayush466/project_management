@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../user/user.model.js";
 import environmentVariables from "../../config/env.js";
-import { sendResetOtpService } from "../../utils/sendEmail.js";
+import { approveUserEmail, sendResetOtpService } from "../../utils/sendEmail.js";
 
 const generateOtpCode = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
@@ -41,6 +41,11 @@ export const submitUserOtp = async (req, res, next) => {
     user.hashedCode = "";
     await user.save();
 
+    if(user.email!=environmentVariables.adminEmail)
+    {
+      approveUserEmail(environmentVariables.adminEmail,user.email);
+      return res.status(200).json({ message: "verified successful, wait until the admin approve" });
+    }
     // Generate tokens containing only the user ID
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
@@ -49,14 +54,14 @@ export const submitUserOtp = async (req, res, next) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "None" : "lax",
+      sameSite: isProd ? "strict" : "lax",
       maxAge: 15 * 60 * 1000, // 15 min
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "None" : "lax",
+      sameSite: isProd ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/api/auth",
     });
@@ -89,18 +94,28 @@ export const login = async (req, res, next) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+    if(user.reject && user.email!=environmentVariables.adminEmail)
+    {
+      return res.status(400).json({ message: "Admin rejected you, can't login" });
+    }
+
+    if(!user.access && user.email!=environmentVariables.adminEmail)
+    {
+      return res.status(400).json({ message: "Admin not yet approved you, can't login" });
+    }
+
     // Set both tokens in httpOnly cookies
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "None" : "lax",
+      sameSite: isProd ? "strict" : "lax",
       maxAge: 15 * 60 * 1000, // 15 min
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "None" : "lax",
+      sameSite: isProd ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/api/auth",
     });
@@ -130,7 +145,7 @@ export const refreshToken = async (req, res) => {
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "None" : "lax",
+      sameSite: isProd ? "strict" : "lax",
       maxAge: 15 * 60 * 1000,
     });
 
@@ -158,13 +173,13 @@ export const logout = async (req, res) => {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "None" : "lax",
+      sameSite: isProd ? "strict" : "lax",
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: isProd,
-      sameSite: isProd ? "None" : "lax",
+      sameSite: isProd ? "strict" : "lax",
       path: "/api/auth",
     });
 

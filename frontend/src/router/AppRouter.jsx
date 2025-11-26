@@ -3,13 +3,13 @@ import Register from "../pages/auth/Register";
 import Login from "../pages/auth/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import { Navigate } from "react-router-dom";
-import Dashboard from "../pages/Dashboard";
-import TeamPage from "../pages/TeamPage";
+import Approve from "../pages/Approve";
 import Projects from "../pages/Projects";
-import Notifications from "../pages/Notifications";
-import Invitation from "../pages/Invitation";
 
-import TasksPage from "../pages/TaskPage";
+import Trash from "../pages/Trash";
+import AdminProfile from "../pages/AdminProfile";
+import ApprovedUser from "../pages/ApprovedUser";
+import RejectedUser from "../pages/RejectedUser";
 
 function AppRouter() {
   return (
@@ -20,46 +20,55 @@ function AppRouter() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/team"
-        element={
-          <ProtectedRoute>
-            <TeamPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/tasks"
-        element={
-          <ProtectedRoute>
-            <TasksPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/projects"
-        element={
-          <ProtectedRoute>
             <Projects />
           </ProtectedRoute>
         }
       />
 
       <Route
-        path="/invitation"
+        path="/approve"
         element={
           <ProtectedRoute>
-            <Invitation />
+            <Approve />
           </ProtectedRoute>
         }
       />
+
+         <Route
+        path="/trash"
+        element={
+          <ProtectedRoute>
+            <Trash />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <AdminProfile />
+          </ProtectedRoute>
+        }
+      />
+
+       <Route
+        path="/approved-users"
+        element={
+          <ProtectedRoute>
+            <ApprovedUser />
+          </ProtectedRoute>
+        }
+      />
+
+       <Route
+        path="/rejected-users"
+        element={
+          <ProtectedRoute>
+            <RejectedUser />
+          </ProtectedRoute>
+        }
+        />
 
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
