@@ -4,6 +4,7 @@ import User from "../user/user.model.js";
 import * as listService from "../list/list.service.js";
 import cloudinary from "../../utils/claudinary.js";
 import environmentVariables from "../../config/env.js";
+import Board from "../board/board.model.js";
 
 export const createCard = async (req, res, next) => {
   try {
@@ -200,7 +201,7 @@ export const deleteCardFile = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "Card Attachment removed successfully",
-      data: card,
+      data: attachmentFile[0],
     });
   } catch (err) {
     next(err);
@@ -224,7 +225,7 @@ export const deleteCard = async (req, res, next) => {
         .json({ success: false, message: "List not found" });
     }
 
-    const card = await cardService.getCard({
+    const card = await cardService.getDeleteCard({
       _id: req.params.cardId,
       list: req.params.listId,
     });
@@ -245,21 +246,8 @@ export const deleteCard = async (req, res, next) => {
     card.trash=true;
     card.save();
 
-    await User.updateOne({email:req.user.email},{$addToSet:{trashCards:card._id}})    
-
+    await Board.updateOne({_id:req.params.boardId},{$addToSet:{trashCards:card._id}})
     
-
-    // await Promise.all(
-    //   card.attachments.map((file) => cloudinary.uploader.destroy(file.fileId))
-    // );
-
-    // await cardService.deleteCard({ _id: req.params.cardId });
-    
-//         await List.updateOne(
-//   { _id: req.params.listId },
-//   { $pull: { cards: req.params.cardId } }
-// )
-
     res.status(201).json({
       success: true,
       message: "Card moved to in trash successfully",
@@ -308,20 +296,7 @@ export const restoreCard = async (req, res, next) => {
     card.trash=false;
     card.save();
 
-    await User.updateOne({email:req.user.email},{$pull:{trashCards:card._id}})    
-
-    
-
-    // await Promise.all(
-    //   card.attachments.map((file) => cloudinary.uploader.destroy(file.fileId))
-    // );
-
-    // await cardService.deleteCard({ _id: req.params.cardId });
-    
-//         await List.updateOne(
-//   { _id: req.params.listId },
-//   { $pull: { cards: req.params.cardId } }
-// )
+    await Board.updateOne({_id:req.params.boardId},{$pull:{trashCards:card._id}})    
 
     res.status(201).json({
       success: true,
@@ -380,13 +355,12 @@ export const permanentlyDeleteCard = async (req, res, next) => {
   { $pull: { cards: req.params.cardId } }
 )
 
-    await User.updateOne({email:req.user.email},{$pull:{trashCards:card._id}})    
-
+    await Board.updateOne({_id:req.params.boardId},{$pull:{trashCards:card._id}})    
 
     res.status(201).json({
       success: true,
       message: "Card deleted permanently",
-      data: card,
+      data: {_id:card._id,title:card.title},
     });
   } catch (err) {
     next(err);

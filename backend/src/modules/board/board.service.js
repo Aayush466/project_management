@@ -8,17 +8,29 @@ export const createBoard = async (data) => {
 };
 
 export const getBoard = async (condition) => {
-  return await Board.findOne(condition).populate({
-    path: 'createdBy',
-    select: '-password -refreshToken -resetExpiresAt -__v -reset -expiresOtpAt -hashedCode',
-  }).populate({
+  return await Board.findOne(condition).select("-createdBy").populate({
       path: 'lists',
-      select: '-board',
+      select: '-board -color',
       populate: {
         path: 'cards',
-        select: '-list', // optional: prevent circular reference
+        select: '-color -status -priority -checkLists -attachments -list', // optional: prevent circular reference
+      },
+    }).populate({path:"trashCards",select:"-color -status -priority -checkLists -attachments"}).populate({path:"trashLists",select:"-cards"});
+};
+
+export const getDeletePermanentlyBoard = async (condition) => {
+  return await Board.findOne(condition).select("-createdBy").populate({
+      path: 'lists',
+      select: '-board -color',
+      populate: {
+        path: 'cards',
+        select: '-color -status -priority -checkLists -list', // optional: prevent circular reference
       },
     });
+};
+
+export const getRestoreDeleteBoard = async (condition) => {
+  return await Board.findOne(condition).select("-createdBy -lists -trashCards -trashLists");
 };
 
 export const updateBoard = async (condition,data) => {

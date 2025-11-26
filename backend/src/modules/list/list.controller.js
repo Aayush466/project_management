@@ -96,7 +96,7 @@ export const deleteList = async (req, res, next) => {
       return res.status(400).json({ message: "board does not exists" });
     }
 
-    const list = await listService.getList({
+    const list = await listService.getDeleteList({
       _id: req.params.listId,
       board: req.params.boardId,
     });
@@ -107,8 +107,7 @@ export const deleteList = async (req, res, next) => {
         .json({ success: false, message: "List not found" });
     }
 
-    if(list.trash)
-      {
+    if (list.trash) {
       return res
         .status(404)
         .json({ success: false, message: "List is already in trash" });
@@ -117,35 +116,10 @@ export const deleteList = async (req, res, next) => {
     list.trash = true;
     list.save();
 
-    await User.updateOne(
-      { email: req.user.email },
+    await Board.updateOne(
+      { _id: req.params.boardId },
       { $addToSet: { trashLists: list._id } }
     );
-
-
-    // let cardIds = [];
-    // let attachmentIds = [];
-
-    // for (const card of list.cards) {
-    //   attachmentIds = [
-    //     ...attachmentIds,
-    //     ...card.attachments.map((file) => file.fileId),
-    //   ];
-    //   cardIds = [...cardIds, card._id];
-    // }
-
-    // await Promise.all(
-    //   attachmentIds.map((publicId) => cloudinary.uploader.destroy(publicId))
-    // );
-
-    // await Card.deleteMany({ _id: { $in: cardIds } });
-
-    // await List.deleteOne({ _id: req.params.listId });
-
-    // await Board.updateOne(
-    //   { _id: req.params.boardId },
-    //   { $pull: { lists: req.params.listId } }
-    // );
 
     res.status(201).json({
       success: true,
@@ -174,8 +148,7 @@ export const restoreList = async (req, res, next) => {
         .json({ success: false, message: "List not found" });
     }
 
-    if(!list.trash)
-      {
+    if (!list.trash) {
       return res
         .status(404)
         .json({ success: false, message: "List not exists in trash" });
@@ -184,35 +157,10 @@ export const restoreList = async (req, res, next) => {
     list.trash = false;
     list.save();
 
-    await User.updateOne(
-      { email: req.user.email },
+    await Board.updateOne(
+      { _id: req.params.boardId },
       { $pull: { trashLists: list._id } }
     );
-
-
-    // let cardIds = [];
-    // let attachmentIds = [];
-
-    // for (const card of list.cards) {
-    //   attachmentIds = [
-    //     ...attachmentIds,
-    //     ...card.attachments.map((file) => file.fileId),
-    //   ];
-    //   cardIds = [...cardIds, card._id];
-    // }
-
-    // await Promise.all(
-    //   attachmentIds.map((publicId) => cloudinary.uploader.destroy(publicId))
-    // );
-
-    // await Card.deleteMany({ _id: { $in: cardIds } });
-
-    // await List.deleteOne({ _id: req.params.listId });
-
-    // await Board.updateOne(
-    //   { _id: req.params.boardId },
-    //   { $pull: { lists: req.params.listId } }
-    // );
 
     res.status(201).json({
       success: true,
@@ -230,7 +178,7 @@ export const permanentlyDeleteList = async (req, res, next) => {
       return res.status(400).json({ message: "board does not exists" });
     }
 
-    const list = await listService.getList({
+    const list = await listService.getDeletePermanentList({
       _id: req.params.listId,
       board: req.params.boardId,
     });
@@ -241,13 +189,11 @@ export const permanentlyDeleteList = async (req, res, next) => {
         .json({ success: false, message: "List not found" });
     }
 
-    if(!list.trash)
-      {
+    if (!list.trash) {
       return res
         .status(404)
         .json({ success: false, message: "List not exists in trash" });
     }
-
 
     let cardIds = [];
     let attachmentIds = [];
@@ -270,91 +216,13 @@ export const permanentlyDeleteList = async (req, res, next) => {
 
     await Board.updateOne(
       { _id: req.params.boardId },
-      { $pull: { lists: req.params.listId } }
-    );
-
-        
-    await User.updateOne(
-      { email: req.user.email },
-      { $pull: { trashLists: list._id } }
+      { $pull: { lists: req.params.listId, trashLists: req.params.listId } }
     );
 
     res.status(201).json({
       success: true,
       message: "List permanently deleted",
-      data: list,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const archiveList = async (req, res, next) => {
-  try {
-    if (!req.user.myBoards.some((b) => b.equals(req.params.boardId))) {
-      return res.status(400).json({ message: "board does not exists" });
-    }
-
-    const list = await listService.getList({
-      _id: req.params.listId,
-      board: req.params.boardId,
-    });
-
-    if (!list) {
-      return res
-        .status(404)
-        .json({ success: false, message: "List not found" });
-    }
-
-    if (list.isArchived)
-      return res
-        .status(404)
-        .json({ success: false, message: "Already archived" });
-
-    list.isArchived = true;
-
-    await list.save();
-
-    res.status(201).json({
-      success: true,
-      message: "List archived successfully",
-      data: list,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const unArchiveList = async (req, res, next) => {
-  try {
-    if (!req.user.myBoards.some((b) => b.equals(req.params.boardId))) {
-      return res.status(400).json({ message: "board does not exists" });
-    }
-
-    const list = await listService.getList({
-      _id: req.params.listId,
-      board: req.params.boardId,
-    });
-
-    if (!list) {
-      return res
-        .status(404)
-        .json({ success: false, message: "List not found" });
-    }
-
-    if (!list.isArchived)
-      return res
-        .status(404)
-        .json({ success: false, message: "Already not in archieved" });
-
-    list.isArchived = false;
-
-    await list.save();
-
-    res.status(201).json({
-      success: true,
-      message: "List unarchived successfully",
-      data: list,
+      data: {_id:list._id,title:list.title},
     });
   } catch (err) {
     next(err);

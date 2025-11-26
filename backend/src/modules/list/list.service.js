@@ -8,7 +8,15 @@ export const createList = async (data) => {
 };
 
 export const getList = async (condition) => {
-  return await List.findOne(condition).populate('board').populate("cards");
+  return await List.findOne(condition).select("-board").populate({path:"cards",select:"-color -status -priority -checkLists -attachments -list"});
+};
+
+export const getDeleteList = async (condition) => {
+  return await List.findOne(condition).select("-board").populate({path:"cards",select:"-attachments -color -status -priority -checkLists -attachments -list"});
+};
+
+export const getDeletePermanentList = async (condition) => {
+  return await List.findOne(condition).populate("cards");
 };
 
 export const updateList = async (condition,data) => {

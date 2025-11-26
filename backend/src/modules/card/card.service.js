@@ -7,7 +7,11 @@ export const createCard = async (data) => {
 };
 
 export const getCard = async (condition) => {
-  return await Card.findOne(condition).populate('list');
+  return await Card.findOne(condition).select("-list");
+};
+
+export const getDeleteCard = async (condition) => {
+  return await Card.findOne(condition).select("-attachments -color -status -priority -checkLists -attachments -list");
 };
 
 export const updateCard = async (condition,data) => {

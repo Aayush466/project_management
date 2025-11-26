@@ -12,51 +12,10 @@ const userSchema = new mongoose.Schema(
     },
     password: { type: String, required: true, minlength: 6 },
     access: { type: Boolean, default: false },
-    myUsers: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        acceptedAt: { type: Date, default: Date.now },
-      },
-    ],
+    reject: { type: Boolean, default: false },
     myBoards: [{ type: mongoose.Schema.Types.ObjectId, ref: "Board" }],
-    trashCards: [
-      {type:mongoose.Schema.Types.ObjectId,ref:"Card"}
-    ],
-    trashLists: [
-      {type:mongoose.Schema.Types.ObjectId,ref:"List"}
-    ],
     trashBoards: [
       {type:mongoose.Schema.Types.ObjectId,ref:"Board"}
-    ],
-    invitedUsers: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        invitedAt: { type: Date, default: Date.now },
-      },
-    ],
-    invitations: [
-      {
-        admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        invitedAt: { type: Date, default: Date.now },
-      },
-    ],
-    rejectedUsers: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rejectedAt: { type: Date, default: Date.now },
-      },
-    ],
-    rejectedAdmins: [
-      {
-        admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rejectedAt: { type: Date, default: Date.now },
-      },
-    ],
-    acceptedAdmins: [
-      {
-        admin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rejectedAt: { type: Date, default: Date.now },
-      },
     ],
     hashedCode: { type: String, default: "" },
     expiresOtpAt: { type: Date, required: true },

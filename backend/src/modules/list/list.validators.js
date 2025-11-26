@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const createListSchema = Joi.object({
-  title: Joi.string().trim().min(3).required(),
+  title: Joi.string().trim().required(),
   color: Joi.string()
     .valid("green", "blue", "purple", "red", "yellow", "teal", "sky", "gray")
     .default("green"),

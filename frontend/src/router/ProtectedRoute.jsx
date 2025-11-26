@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
-import { setProfile,setPendingUsers, setAdmin,setTrashBoards,setTrashCards,setTrashLists } from "../features/profile/profileSlice";
+import { useDispatch } from "react-redux";
+import { setProfile,setPendingUsers, setAdmin,setTrashBoards,setBoards, setAcceptedUsers, setRejectedUsers} from "../features/profile/profileSlice";
 
 const ProtectedRoute = ({ children }) => {
-  const [authState, setAuthState] = useState("loading"); // "loading" | "authenticated" | "unauthenticated"
+  const [authState, setAuthState] = useState("loading"); 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -21,13 +21,11 @@ const ProtectedRoute = ({ children }) => {
           dispatch(setProfile(res.data.data));
           dispatch(setAdmin(res.data.admin));
           dispatch(setPendingUsers(res.data.pendingUsers?res.data.pendingUsers:[]))
-          dispatch(setPendingUsers(res.data.pendingUsers?res.data.pendingUsers:[]))
-          dispatch(setTrashCards(res.data.trashCards?res.data.trashCards:[]))
-          dispatch(setTrashLists(res.data.trashLists?res.data.trashLists:[]))
-          dispatch(setTrashBoards(res.data.trashBoards?res.data.trashBoards:[]))
-          
-          console.log(res.data.pendingUsers)
-          
+          dispatch(setAcceptedUsers(res.data.acceptedUsers?res.data.acceptedUsers:[]))
+          dispatch(setRejectedUsers(res.data.rejectedUsers?res.data.rejectedUsers:[]))
+          dispatch(setTrashBoards(res.data.data.trashBoards))
+          dispatch(setBoards(res.data.data.myBoards.filter(board=>!board.trash)))
+                    
           setAuthState("authenticated");
         } else {
           // ❌ Not authenticated
@@ -35,7 +33,7 @@ const ProtectedRoute = ({ children }) => {
           navigate("/login");
         }
       } catch (error) {
-        console.error("Error checking auth:", error);
+        console.error("Error checking auth at procted route:", error);
         setAuthState("unauthenticated");
         navigate("/login");
       }

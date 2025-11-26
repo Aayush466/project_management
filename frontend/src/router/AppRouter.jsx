@@ -3,15 +3,13 @@ import Register from "../pages/auth/Register";
 import Login from "../pages/auth/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import { Navigate } from "react-router-dom";
-import Dashboard from "../pages/Dashboard";
 import Approve from "../pages/Approve";
-import TeamPage from "../pages/TeamPage";
 import Projects from "../pages/Projects";
-import Notifications from "../pages/Notifications";
-import Invitation from "../pages/Invitation";
 
-import TasksPage from "../pages/TaskPage";
 import Trash from "../pages/Trash";
+import AdminProfile from "../pages/AdminProfile";
+import ApprovedUser from "../pages/ApprovedUser";
+import RejectedUser from "../pages/RejectedUser";
 
 function AppRouter() {
   return (
@@ -45,41 +43,32 @@ function AppRouter() {
         }
       />
 
-      {/* <Route
-        path="/team"
+      <Route
+        path="/profile"
         element={
           <ProtectedRoute>
-            <TeamPage />
+            <AdminProfile />
           </ProtectedRoute>
         }
       />
 
-      <Route
-        path="/tasks"
+       <Route
+        path="/approved-users"
         element={
           <ProtectedRoute>
-            <TasksPage />
+            <ApprovedUser />
           </ProtectedRoute>
         }
       />
 
-      <Route
-        path="/projects"
+       <Route
+        path="/rejected-users"
         element={
           <ProtectedRoute>
-            <Projects />
+            <RejectedUser />
           </ProtectedRoute>
         }
-      />
-
-      <Route
-        path="/invitation"
-        element={
-          <ProtectedRoute>
-            <Invitation />
-          </ProtectedRoute>
-        }
-      /> */}
+        />
 
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>

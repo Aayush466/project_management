@@ -8,7 +8,7 @@ const listSchema = new mongoose.Schema(
       ref: "Board",
       required: true,
     },
-    title: { type: String, required: true, trim: true, minlength: 3 },
+    title: { type: String, required: true, trim: true },
     color: {
       type: String,
       enum: ["green", "blue", "purple", "red", "yellow", "teal", "sky", "gray"],

@@ -18,7 +18,13 @@ export const createBoard = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "Board created Successfully",
-      data: newBoard,
+      data: {
+        _id: newBoard._id,
+        title: newBoard.title,
+        trash: false,
+        createdAt: newBoard.createdAt,
+        updatedAt: newBoard.updatedAt,
+      },
     });
   } catch (err) {
     next(err);
@@ -70,37 +76,9 @@ export const deleteBoard = async (req, res, next) => {
       return res.status(400).json({ message: "board does not exists" });
     }
 
-    const board = await boardService.getBoard({ _id: req.params.boardId });
-
-    // let listIds = [];
-    // let cardIds = [];
-    // let attachmentIds = [];
-
-    // for (const list of board.lists) {
-    //   listIds = [...listIds, list._id];
-
-    //   for (const card of list.cards) {
-    //     attachmentIds = [
-    //       ...attachmentIds,
-    //       ...card.attachments.map((file) => file.fileId),
-    //     ];
-    //     cardIds = [...cardIds, card._id];
-    //   }
-    // }
-
-    //       await Promise.all(
-    //     attachmentIds.map((publicId) => cloudinary.uploader.destroy(publicId))
-    //   );
-
-    //   await Card.deleteMany({ _id: { $in: cardIds } });
-
-    //   await List.deleteMany({ _id: { $in: listIds } });
-
-    // await boardService.deleteBoard({ _id: req.params.boardId });
-
-    // await User.findByIdAndUpdate(req.user._id, {
-    //   $pull: { myBoards: req.params.boardId },
-    // });
+    const board = await boardService.getRestoreDeleteBoard({
+      _id: req.params.boardId,
+    });
 
     if (board.trash) {
       return res
@@ -132,37 +110,9 @@ export const restoreBoard = async (req, res, next) => {
       return res.status(400).json({ message: "board does not exists" });
     }
 
-    const board = await boardService.getBoard({ _id: req.params.boardId });
-
-    // let listIds = [];
-    // let cardIds = [];
-    // let attachmentIds = [];
-
-    // for (const list of board.lists) {
-    //   listIds = [...listIds, list._id];
-
-    //   for (const card of list.cards) {
-    //     attachmentIds = [
-    //       ...attachmentIds,
-    //       ...card.attachments.map((file) => file.fileId),
-    //     ];
-    //     cardIds = [...cardIds, card._id];
-    //   }
-    // }
-
-    //       await Promise.all(
-    //     attachmentIds.map((publicId) => cloudinary.uploader.destroy(publicId))
-    //   );
-
-    //   await Card.deleteMany({ _id: { $in: cardIds } });
-
-    //   await List.deleteMany({ _id: { $in: listIds } });
-
-    // await boardService.deleteBoard({ _id: req.params.boardId });
-
-    // await User.findByIdAndUpdate(req.user._id, {
-    //   $pull: { myBoards: req.params.boardId },
-    // });
+    const board = await boardService.getRestoreDeleteBoard({
+      _id: req.params.boardId,
+    });
 
     if (!board.trash) {
       return res
@@ -194,7 +144,9 @@ export const deletePermanentlyBoard = async (req, res, next) => {
       return res.status(400).json({ message: "board does not exists" });
     }
 
-    const board = await boardService.getBoard({ _id: req.params.boardId });
+    const board = await boardService.getDeletePermanentlyBoard({
+      _id: req.params.boardId,
+    });
 
     if (!board.trash) {
       return res
@@ -241,7 +193,7 @@ export const deletePermanentlyBoard = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "Board deleted successfully",
-      data: board,
+      data: { title: board.title, _id: board._id },
     });
   } catch (err) {
     next(err);
